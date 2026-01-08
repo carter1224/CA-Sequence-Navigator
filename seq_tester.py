@@ -67,7 +67,7 @@ class TagToolGUI(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("Sequence Transfer Tool")
+        self.title("Sequence Transfer Utility")
         self._set_app_icon()
         self.geometry("1150x820")
         self.minsize(1000, 760)
@@ -85,12 +85,12 @@ class TagToolGUI(tk.Tk):
         self.chunk_size_var = tk.IntVar(value=20)  # requests per batch
         self.include_program_tags_var = tk.BooleanVar(value=False)
         self.advanced_open = tk.BooleanVar(value=False)
-        self.theme_mode_var = tk.StringVar(value="Light")
         self.retry_count_var = tk.IntVar(value=3)
         self.retry_delay_ms_var = tk.IntVar(value=500)
 
         self.status_var = tk.StringVar(value="Ready.")
         self.search_var = tk.StringVar(value="")
+        self.dest_search_var = tk.StringVar(value="")
         self.progress_var = tk.IntVar(value=0)
 
         # Export selection state.
@@ -100,14 +100,15 @@ class TagToolGUI(tk.Tk):
         self.import_folder_var = tk.StringVar(value="")
         self.selected_json_path_var = tk.StringVar(value="")
         self.dest_tag_vars: dict[str, tk.BooleanVar] = {}
+        self.dest_tag_names: list[str] = []
         self.selected_json_display_var = tk.StringVar(value="None")
         self.selected_tags_display_var = tk.StringVar(value="None")
         self._scroll_regions = []
         self._scroll_bound = False
 
         self._build_ui()
-        self.theme_mode_var.trace_add("write", lambda *_: self._apply_theme())
-        self._apply_theme()
+        self._apply_styles()
+        self.bind("<Configure>", lambda _e: self._position_advanced_overlay())
         self._apply_mode()
 
     # -------- connection helpers --------
@@ -157,13 +158,8 @@ class TagToolGUI(tk.Tk):
 
         ttk.Button(btns, text="Test Connection", command=self.test_connection).pack(side="left")
 
-        self.export_btn = ttk.Button(btns, text="Export Selected Tags", command=self.export_selected)
-        self.export_btn_pack = {"side": "left", "padx": (10, 0)}
-        self.export_btn.pack(**self.export_btn_pack)
-
-        self.import_btn = ttk.Button(btns, text="Import (selected tag + selected JSON)", command=self.import_one)
-        self.import_btn_pack = {"side": "left", "padx": (10, 0)}
-        self.import_btn.pack(**self.import_btn_pack)
+        self.import_btn = ttk.Button(self, text="Import (selected tag + selected JSON)", command=self.import_one)
+        self.import_btn.pack_forget()
 
         ttk.Button(btns, text="Advanced Settings…", command=self.toggle_advanced).pack(side="right")
 
@@ -175,6 +171,9 @@ class TagToolGUI(tk.Tk):
             self.progress_row, variable=self.progress_var, maximum=100, style="App.Horizontal.TProgressbar"
         )
         self.progress_bar.pack(fill="x")
+
+        self.import_action_row = ttk.Frame(self)
+        self.import_action_row.pack_forget()
 
         # Advanced (collapsed)
         self.advanced_frame = ttk.LabelFrame(self, text="Advanced Settings")
@@ -198,14 +197,6 @@ class TagToolGUI(tk.Tk):
         ttk.Label(adv, text="Lower = more reliable, higher = faster.").grid(
             row=1, column=2, sticky="w", padx=(18, 0), pady=(8, 0)
         )
-        ttk.Label(adv, text="Theme:").grid(row=2, column=0, sticky="w", pady=(8, 0))
-        ttk.Combobox(
-            adv,
-            textvariable=self.theme_mode_var,
-            values=["System", "Light", "Dark"],
-            state="readonly",
-            width=10,
-        ).grid(row=2, column=1, sticky="w", pady=(8, 0))
         ttk.Label(adv, text="Retries:").grid(row=3, column=0, sticky="w", pady=(8, 0))
         ttk.Spinbox(adv, from_=1, to=10, textvariable=self.retry_count_var, width=6).grid(
             row=3, column=1, sticky="w", pady=(8, 0)
@@ -214,10 +205,10 @@ class TagToolGUI(tk.Tk):
         ttk.Spinbox(adv, from_=0, to=5000, increment=100, textvariable=self.retry_delay_ms_var, width=6).grid(
             row=4, column=1, sticky="w", pady=(8, 0)
         )
-        ttk.Label(adv, text="Sequence Transfer Tool by Carter Smith").grid(
+        ttk.Label(adv, text="Sequence Transfer Utility by Carter Smith").grid(
             row=5, column=0, columnspan=3, sticky="w", pady=(10, 0)
         )
-        ttk.Label(adv, text="Build 1.0").grid(
+        ttk.Label(adv, text="Build 1.0.1").grid(
             row=6, column=0, columnspan=3, sticky="w", pady=(4, 0)
         )
 
@@ -228,9 +219,13 @@ class TagToolGUI(tk.Tk):
         self.export_panel = ttk.Frame(self.main)
         self.export_panel.pack(fill="both", expand=True)
 
-        exp_actions0 = ttk.Frame(self.export_panel)
-        exp_actions0.pack(fill="x", padx=10, pady=(10, 0))
-        ttk.Button(exp_actions0, text="Load Tags", command=self.load_tags).pack(side="left")
+        self.export_action_row = ttk.Frame(self.export_panel)
+        self.export_action_row.pack(fill="x", padx=10, pady=(10, 0))
+        ttk.Button(self.export_action_row, text="Load Tags", command=self.load_tags).pack(side="left")
+        self.export_btn = ttk.Button(
+            self.export_action_row, text="Export Selected Tags", command=self.export_selected
+        )
+        self.export_btn.pack(side="left", padx=(10, 0))
 
         exp_top = ttk.Frame(self.export_panel)
         exp_top.pack(fill="x", padx=10, pady=(6, 0))
@@ -276,14 +271,23 @@ class TagToolGUI(tk.Tk):
         left = ttk.LabelFrame(imp_top, text="JSON file — select ONE")
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
 
-        ttk.Label(imp_top, text="→", font=("Segoe UI", 20, "bold")).grid(row=0, column=1, padx=10)
+        ttk.Label(imp_top, text="→", font=("Segoe UI Symbol", 24, "bold")).grid(row=0, column=1, padx=10)
 
-        right = ttk.LabelFrame(imp_top, text="Destination tag (must be SEQ[100])")
+        right = ttk.LabelFrame(imp_top, text="Destination tag(s) (must be SEQ[100])")
         right.grid(row=0, column=2, sticky="nsew", padx=(8, 0))
 
         dest_top = ttk.Frame(right)
         dest_top.pack(fill="x", padx=10, pady=(10, 0))
         ttk.Button(dest_top, text="Load Tags", command=self.load_tags).pack(side="left")
+        dest_search = ttk.Entry(dest_top, textvariable=self.dest_search_var, style="ExportFilter.TEntry")
+        dest_search.pack(side="left", fill="x", expand=True, padx=(10, 0))
+        dest_search.bind("<KeyRelease>", lambda _e: self._render_dest_checkboxes())
+        dest_menu_btn = ttk.Menubutton(dest_top, text="...", style="ExportMenu.TMenubutton")
+        dest_menu = tk.Menu(dest_menu_btn, tearoff=0)
+        dest_menu.add_command(label="Select All", command=self._select_all_dest)
+        dest_menu.add_command(label="Select None", command=self._select_none_dest)
+        dest_menu_btn.configure(menu=dest_menu)
+        dest_menu_btn.pack(side="right")
 
         # Destination tag list (checkbox multi-select)
         self.dest_canvas = tk.Canvas(right, highlightthickness=0)
@@ -353,95 +357,31 @@ class TagToolGUI(tk.Tk):
         except Exception:
             pass
 
-    def _detect_system_theme(self) -> str:
-        if os.name != "nt":
-            return "Light"
-        try:
-            import winreg
-
-            key = winreg.OpenKey(
-                winreg.HKEY_CURRENT_USER,
-                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
-            )
-            value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
-            return "Light" if value == 1 else "Dark"
-        except Exception:
-            return "Light"
-
-    def _apply_theme(self):
-        mode = self.theme_mode_var.get().strip()
-        if mode == "System":
-            mode = self._detect_system_theme()
-
-        if mode == "Dark":
-            bg = "#252526"
-            fg = "#e6e6e6"
-            frame_bg = "#252526"
-            entry_bg = "#2d2d30"
-            entry_fg = "#e6e6e6"
-            active_bg = "#3a3a3a"
-        else:
-            bg = "#ffffff"
-            fg = "#1c1c1c"
-            frame_bg = "#ffffff"
-            entry_bg = "#ffffff"
-            entry_fg = "#1c1c1c"
-            active_bg = "#e6e6e6"
-
+    def _apply_styles(self):
         style = ttk.Style(self)
         try:
             style.theme_use("clam")
         except tk.TclError:
             pass
-        style.configure("TFrame", background=frame_bg)
-        style.configure("TLabelframe", background=frame_bg)
-        style.configure("TLabelframe.Label", background=frame_bg, foreground=fg)
-        style.configure("TLabel", background=frame_bg, foreground=fg)
-        style.configure("TButton", background=frame_bg, foreground=fg)
-        style.configure("TCheckbutton", background=frame_bg, foreground=fg)
-        style.configure("TRadiobutton", background=frame_bg, foreground=fg)
-        style.configure("TMenubutton", background=frame_bg, foreground=fg)
-        style.configure("TEntry", fieldbackground=entry_bg, foreground=entry_fg)
-        style.configure(
-            "TCombobox",
-            fieldbackground=entry_bg,
-            foreground=entry_fg,
-            background=frame_bg,
-        )
-        style.map("TCombobox", fieldbackground=[("readonly", entry_bg)])
-        style.configure("ExportFilter.TEntry", fieldbackground=entry_bg, foreground=entry_fg, padding=(6, 3))
+        base_bg = self.cget("bg")
+        style.configure("TFrame", background=base_bg)
+        style.configure("TLabelframe", background=base_bg)
+        style.configure("TLabelframe.Label", background=base_bg)
+        style.configure("TLabel", background=base_bg)
+        style.configure("ExportFilter.TEntry", padding=(6, 3))
         style.configure("ExportMenu.TMenubutton", padding=(6, 3))
         style.configure(
-            "Import.Treeview",
-            background=frame_bg,
-            fieldbackground=frame_bg,
-            foreground=fg,
-            rowheight=24,
-            borderwidth=0,
-            relief="flat",
-        )
-        style.map(
-            "Import.Treeview",
-            background=[("selected", active_bg)],
-            foreground=[("selected", fg)],
-        )
-        style.configure("TSpinbox", fieldbackground=entry_bg, foreground=entry_fg)
-        style.map("TButton", background=[("active", active_bg)])
-        style.map("TMenubutton", background=[("active", active_bg)])
-        style.configure(
             "App.Horizontal.TProgressbar",
-            troughcolor=frame_bg,
+            troughcolor=base_bg,
             background="#2f7ee6",
         )
         style.configure(
             "Hidden.Horizontal.TProgressbar",
-            troughcolor=frame_bg,
-            background=frame_bg,
+            troughcolor=base_bg,
+            background=base_bg,
         )
-
-        self.configure(bg=bg)
-        self.export_canvas.configure(bg=frame_bg)
-        self.dest_canvas.configure(bg=frame_bg)
+        self.export_canvas.configure(bg=base_bg)
+        self.dest_canvas.configure(bg=base_bg)
 
     def _setup_autohide_scrollbar(self, container: tk.Widget, scrollbar: ttk.Scrollbar, pack_opts: dict):
         scrollbar.pack_forget()
@@ -540,17 +480,25 @@ class TagToolGUI(tk.Tk):
 
     def toggle_advanced(self):
         if self.advanced_open.get():
-            self.advanced_frame.pack_forget()
+            self.advanced_frame.place_forget()
             self.advanced_open.set(False)
             self.set_status("Advanced Settings hidden.")
         else:
-            self.advanced_frame.pack(fill="x", padx=10, pady=(0, 8))
             self.advanced_open.set(True)
-            self.update_idletasks()
-            required = self.winfo_reqheight()
-            if self.winfo_height() < required:
-                self.geometry(f"{self.winfo_width()}x{required}")
+            self._position_advanced_overlay()
             self.set_status("Advanced Settings shown.")
+
+    def _position_advanced_overlay(self):
+        if not self.advanced_open.get():
+            return
+        self.update_idletasks()
+        pad_x = 10
+        pad_y = 8
+        width = max(200, self.winfo_width() - (pad_x * 2))
+        height = self.advanced_frame.winfo_reqheight()
+        y = max(0, self.winfo_height() - height - pad_y)
+        self.advanced_frame.place(x=pad_x, y=y, width=width)
+        self.advanced_frame.lift()
 
     def _apply_mode(self):
         mode = self.mode_var.get().strip().lower()
@@ -558,15 +506,18 @@ class TagToolGUI(tk.Tk):
             self.import_panel.pack_forget()
             self.export_panel.pack(fill="both", expand=True)
             self.import_btn.pack_forget()
+            self.import_action_row.pack_forget()
             if not self.export_btn.winfo_ismapped():
-                self.export_btn.pack(**self.export_btn_pack)
+                self.export_btn.pack(side="left", padx=(10, 0))
             self.set_status("Export: Load tags → select checkboxes → Export.")
         else:
             self.export_panel.pack_forget()
             self.import_panel.pack(fill="both", expand=True)
             self.export_btn.pack_forget()
+            if not self.import_action_row.winfo_ismapped():
+                self.import_action_row.pack(fill="x", padx=10, pady=(0, 6))
             if not self.import_btn.winfo_ismapped():
-                self.import_btn.pack(**self.import_btn_pack)
+                self.import_btn.pack(in_=self.import_action_row, side="left")
             self.set_status("Import: Load tags → choose folder → select ONE tag + ONE JSON → Import.")
 
     # ---------------- Connection / tag browsing ----------------
@@ -594,6 +545,7 @@ class TagToolGUI(tk.Tk):
 
     def test_connection(self):
         try:
+            self.set_status("Testing connection...")
             info = self._with_plc("Testing connection", lambda plc: plc.get_plc_info())
             self.set_status(f"✅ Connected via {self.plc_path()}: {info.get('product_name', 'PLC')}")
         except Exception as e:
@@ -764,16 +716,14 @@ class TagToolGUI(tk.Tk):
         self._update_selected_summary()
 
     def _populate_dest_tags(self, tag_names: list[str]):
+        self.dest_tag_names = sorted(tag_names, key=str.lower)
         for w in self.dest_frame.winfo_children():
             w.destroy()
         self.dest_tag_vars.clear()
-        for name in tag_names:
-            var = tk.BooleanVar(value=False)
-            self.dest_tag_vars[name] = var
-            ttk.Checkbutton(self.dest_frame, text=name, variable=var, command=self._update_selected_summary).pack(
-                anchor="w", fill="x", padx=4, pady=2
-            )
-        self._update_selected_summary()
+        self.dest_search_var.set("")
+        for name in self.dest_tag_names:
+            self.dest_tag_vars[name] = tk.BooleanVar(value=False)
+        self._render_dest_checkboxes()
 
     def choose_import_folder(self):
         folder = filedialog.askdirectory(title="Choose folder containing exported JSON files")
@@ -817,6 +767,35 @@ class TagToolGUI(tk.Tk):
             self.selected_tags_display_var.set(", ".join(selected_tags))
         else:
             self.selected_tags_display_var.set("None")
+
+    def _select_all_dest(self):
+        for var in self.dest_tag_vars.values():
+            var.set(True)
+        self._update_selected_summary()
+        self._render_dest_checkboxes()
+
+    def _select_none_dest(self):
+        for var in self.dest_tag_vars.values():
+            var.set(False)
+        self._update_selected_summary()
+        self._render_dest_checkboxes()
+
+    def _render_dest_checkboxes(self):
+        filter_text = self.dest_search_var.get().strip().lower()
+        for w in self.dest_frame.winfo_children():
+            w.destroy()
+        shown = 0
+        for name in self.dest_tag_names:
+            if filter_text and filter_text not in name.lower():
+                continue
+            ttk.Checkbutton(self.dest_frame, text=name, variable=self.dest_tag_vars[name],
+                            command=self._update_selected_summary).pack(
+                anchor="w", fill="x", padx=4, pady=2
+            )
+            shown += 1
+        self.set_status(
+            f"Import destinations: {len(self.dest_tag_names)} tag(s). Showing {shown}."
+        )
 
     def _load_json_elements(self, path: str):
         with open(path, "r", encoding="utf-8") as f:
