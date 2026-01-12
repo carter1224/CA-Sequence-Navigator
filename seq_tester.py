@@ -158,9 +158,6 @@ class TagToolGUI(tk.Tk):
 
         ttk.Button(btns, text="Test Connection", command=self.test_connection).pack(side="left")
 
-        self.import_btn = ttk.Button(self, text="Import (selected tag + selected JSON)", command=self.import_one)
-        self.import_btn.pack_forget()
-
         ttk.Button(btns, text="Advanced Settings…", command=self.toggle_advanced).pack(side="right")
 
         self.progress_row = ttk.Frame(self)
@@ -172,8 +169,6 @@ class TagToolGUI(tk.Tk):
         )
         self.progress_bar.pack(fill="x")
 
-        self.import_action_row = ttk.Frame(self)
-        self.import_action_row.pack_forget()
 
         # Advanced (collapsed)
         self.advanced_frame = ttk.LabelFrame(self, text="Advanced Settings")
@@ -324,6 +319,13 @@ class TagToolGUI(tk.Tk):
         )
         self.files_tree.configure(yscrollcommand=files_scroll.set)
         self.files_tree.bind("<<TreeviewSelect>>", self._on_file_select)
+
+        self.import_action_row = ttk.Frame(self.import_panel)
+        self.import_btn = ttk.Button(
+            self.import_action_row, text="Import (selected tag + selected JSON)", command=self.import_one
+        )
+        self.import_btn.pack(side="left")
+        self.import_action_row.pack_forget()
 
         # Import selections summary
         self.import_summary = ttk.Frame(self.import_panel)
@@ -515,9 +517,9 @@ class TagToolGUI(tk.Tk):
             self.import_panel.pack(fill="both", expand=True)
             self.export_btn.pack_forget()
             if not self.import_action_row.winfo_ismapped():
-                self.import_action_row.pack(fill="x", padx=10, pady=(0, 6))
+                self.import_action_row.pack(fill="x", padx=10, pady=(0, 6), before=self.import_summary)
             if not self.import_btn.winfo_ismapped():
-                self.import_btn.pack(in_=self.import_action_row, side="left")
+                self.import_btn.pack(side="left")
             self.set_status("Import: Load tags → choose folder → select ONE tag + ONE JSON → Import.")
 
     # ---------------- Connection / tag browsing ----------------
