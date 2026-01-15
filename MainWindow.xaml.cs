@@ -204,7 +204,7 @@ namespace SequenceNavigator
                 {
                     args += " --include-program-tags";
                 }
-                var result = await RunProcessAsync("python", args);
+                var result = await RunProcessAsync(ResolvePythonPath(), args);
 
                 if (result.ExitCode != 0)
                 {
@@ -774,7 +774,7 @@ namespace SequenceNavigator
                     $"--zip \"{_zipPath}\" --retries {_settings.RetryCount} " +
                     $"--retry-delay {_settings.RetryDelaySeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)} " +
                     $"--timeout {_settings.TimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
-                var result = await RunProcessAsync("python", args);
+                var result = await RunProcessAsync(ResolvePythonPath(), args);
 
                 if (result.ExitCode != 0)
                 {
@@ -898,6 +898,18 @@ namespace SequenceNavigator
                 WriteDebugLog($"Command: {fileName} {arguments}\n{stdout}\n{stderr}\n");
             }
             return new ProcessResult(process.ExitCode, stdout, stderr);
+        }
+
+        private static string ResolvePythonPath()
+        {
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var bundled = Path.Combine(baseDir, "python", "python.exe");
+            if (File.Exists(bundled))
+            {
+                return bundled;
+            }
+
+            return "python";
         }
 
         private void WriteDebugLog(string text)

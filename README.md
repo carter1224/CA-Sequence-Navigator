@@ -17,6 +17,7 @@ Settings are stored per-user at:
 ## Release Package Contents
 The release ZIP includes:
 - `SequenceNavigator.exe`
+- `python/` (portable Python runtime with pycomm3)
 - `SEQ_DataType.L5X`
 - `seq_exporter.py`
 - `seq_importer.py`
