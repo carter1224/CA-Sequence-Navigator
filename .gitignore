@@ -1,0 +1,18 @@
+# Build artifacts
+bin/
+obj/
+
+# Visual Studio / user files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini

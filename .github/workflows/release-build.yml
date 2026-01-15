@@ -1,0 +1,49 @@
+name: Release Build (Sequence Navigator)
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Publish
+        run: >
+          dotnet publish SequenceNavigator.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -o publish
+
+      - name: Copy content files
+        run: |
+          Copy-Item -Path "SEQ_DataType.L5X" -Destination "publish" -Force
+          Copy-Item -Path "seq_exporter.py" -Destination "publish" -Force
+          Copy-Item -Path "seq_importer.py" -Destination "publish" -Force
+
+      - name: Package
+        run: |
+          $zip = "Sequence_Navigator_Windows_x64.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "publish\\*" -DestinationPath $zip
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Sequence_Navigator_Windows_x64.zip

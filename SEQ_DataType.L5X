@@ -1,0 +1,1157 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RSLogix5000Content SchemaRevision="1.0" SoftwareRevision="37.00" TargetName="SEQ" TargetType="DataType" ContainsContext="true" ExportDate="Tue Jan 13 14:44:37 2026" ExportOptions="References NoRawData L5KData DecoratedData Context Dependencies ForceProtectedEncoding AllProjDocTrans">
+<Controller Use="Context" Name="seq_tester">
+<DataTypes Use="Context">
+<DataType Name="CMD1" Family="NoFamily" Class="User">
+<Members>
+<Member Name="ZZZZZZZZZZCMD10" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="AND" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD01) And Command (OR'd normally)]]>
+</Description>
+</Member>
+<Member Name="TFLT" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD02) Sequence Timeout (Pauses sequence)]]>
+</Description>
+</Member>
+<Member Name="ES" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD03) End the sequence]]>
+</Description>
+</Member>
+<Member Name="TM" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD04) Time Multiplier]]>
+</Description>
+</Member>
+<Member Name="LT" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD05) Log Time]]>
+</Description>
+</Member>
+<Member Name="RLIN1" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD06) Release Interlock 1]]>
+</Description>
+</Member>
+<Member Name="RLIN2" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD07) Release Interlock 2]]>
+</Description>
+</Member>
+<Member Name="CMD_8" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD10" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD08) Spare]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD19" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="CMD_9" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD09) Spare]]>
+</Description>
+</Member>
+<Member Name="PTOC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD10) Display Pump To Container Graphic]]>
+</Description>
+</Member>
+<Member Name="PTOF" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD11) Display Pump To Flush Graphic]]>
+</Description>
+</Member>
+<Member Name="RTOC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD12) Display Return To Container Graphic]]>
+</Description>
+</Member>
+<Member Name="RTOW" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD13) Display  Return To Waste Graphic]]>
+</Description>
+</Member>
+<Member Name="CMD_14" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD14) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_15" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD15) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_16" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD19" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD16) Spare]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD118" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="CMD_17" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD17) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_18" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD18) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_19" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD19) Spare]]>
+</Description>
+</Member>
+<Member Name="MTFRL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD20) MTFR Low]]>
+</Description>
+</Member>
+<Member Name="MTFRM" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD21) MTFR Medium]]>
+</Description>
+</Member>
+<Member Name="MTFRH" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD22) MTFR High]]>
+</Description>
+</Member>
+<Member Name="APL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD23) Air Pressure Low]]>
+</Description>
+</Member>
+<Member Name="APM" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD118" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD24) Air Pressure Medium]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD127" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="APH" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD25) Air Pressure High]]>
+</Description>
+</Member>
+<Member Name="SPL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD26) Solvent Pressure Low]]>
+</Description>
+</Member>
+<Member Name="SPM" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD27) Solvent Pressure Medium]]>
+</Description>
+</Member>
+<Member Name="SPH" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD28) Solvent Pressure High]]>
+</Description>
+</Member>
+<Member Name="CMD_29" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD29) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_30" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD30) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_31" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD31) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_32" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD127" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD32) Spare]]>
+</Description>
+</Member>
+</Members>
+</DataType>
+<DataType Name="CMD2" Family="NoFamily" Class="User">
+<Members>
+<Member Name="ZZZZZZZZZZCMD20" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="TS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD33) Time Step]]>
+</Description>
+</Member>
+<Member Name="CMD_34" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD34) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_35" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD35) Spare]]>
+</Description>
+</Member>
+<Member Name="OPC_PB" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD36) Operator Confirm button]]>
+</Description>
+</Member>
+<Member Name="PTC_PB" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD37) Pump To Container PB]]>
+</Description>
+</Member>
+<Member Name="PTF_PB" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD38) Pump To Flush PB]]>
+</Description>
+</Member>
+<Member Name="RTC_PB" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD39) Return To Container PB]]>
+</Description>
+</Member>
+<Member Name="RTW_PB" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD20" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD40) Return To Waste PB]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD29" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="CMD_41" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD41) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_42" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD42) Spare]]>
+</Description>
+</Member>
+<Member Name="P1PL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD43) Pig1 Present at Launch]]>
+</Description>
+</Member>
+<Member Name="P1NPL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD44) Pig1 Not Present at Launch]]>
+</Description>
+</Member>
+<Member Name="P2PL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD45) Pig2 Present at Launch]]>
+</Description>
+</Member>
+<Member Name="P2NPL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD46) Pig2 Not Present at Launch]]>
+</Description>
+</Member>
+<Member Name="P1PC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD47) Pig1 Present at Catch]]>
+</Description>
+</Member>
+<Member Name="P1NPC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD29" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD48) Pig1 NotPresent at Catch]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD218" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="P2PC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD49) Pig2 Present at Catch]]>
+</Description>
+</Member>
+<Member Name="P2NPC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD50) Pig2 Not Present at Catch]]>
+</Description>
+</Member>
+<Member Name="PP_PL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD51) Pig Present at Paint low switch]]>
+</Description>
+</Member>
+<Member Name="PP_SI1" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD52) Pig Present at solvent injection1 switch]]>
+</Description>
+</Member>
+<Member Name="PP_SI2" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD53) Pig Present at solvent injection2 switch]]>
+</Description>
+</Member>
+<Member Name="PP_L1" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD54) Pig Present at Load Position 1 switch]]>
+</Description>
+</Member>
+<Member Name="PP_L2" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD55) Pig Present at Load Position 2 switch]]>
+</Description>
+</Member>
+<Member Name="CMD_56" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD218" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD56) Spare]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD227" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="CMD_57" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD57) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_58" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD58) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_59" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD59) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_60" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD60) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_61" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD61) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_62" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD62) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_63" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD63) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_64" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD227" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD64) Spare]]>
+</Description>
+</Member>
+</Members>
+</DataType>
+<DataType Name="CMD3" Family="NoFamily" Class="User">
+<Members>
+<Member Name="ZZZZZZZZZZCMD30" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="SPD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD65) Supply Pressure Delta]]>
+</Description>
+</Member>
+<Member Name="SPL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD66) Supply Pressure Less than]]>
+</Description>
+</Member>
+<Member Name="SPG" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD67) Supply Pressure Greater than]]>
+</Description>
+</Member>
+<Member Name="RPD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD68) Return Pressure Delta]]>
+</Description>
+</Member>
+<Member Name="RPL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD69) Return Pressure Less than]]>
+</Description>
+</Member>
+<Member Name="RPG" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD70) Return Pressure Greater than]]>
+</Description>
+</Member>
+<Member Name="EPD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD71) End Of LinePressure Delta]]>
+</Description>
+</Member>
+<Member Name="EPL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD30" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD72) End Of LinePressure Less than]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD39" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="EPG" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD73) End Of LinePressure Greater than]]>
+</Description>
+</Member>
+<Member Name="LVLD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD74) Level Delta]]>
+</Description>
+</Member>
+<Member Name="LVLL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD75) Level Less than]]>
+</Description>
+</Member>
+<Member Name="LVLG" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD76) Level Greater than]]>
+</Description>
+</Member>
+<Member Name="FLWD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD77) Flow Delta]]>
+</Description>
+</Member>
+<Member Name="FLWL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD78) Flow Less than]]>
+</Description>
+</Member>
+<Member Name="FLWG" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD79) Flow Greater than]]>
+</Description>
+</Member>
+<Member Name="AS1D" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD39" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD80) Analog Spare 1 Delta]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD318" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="AS1L" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD81) Analog Spare 1 Less than]]>
+</Description>
+</Member>
+<Member Name="AS1G" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD82) Analog Spare 1 Greater than]]>
+</Description>
+</Member>
+<Member Name="AS2D" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD83) Analog Spare 2 Delta]]>
+</Description>
+</Member>
+<Member Name="AS2L" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD84) Analog Spare 2 Less than]]>
+</Description>
+</Member>
+<Member Name="AS2G" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD85) Analog Spare 2 Greater than]]>
+</Description>
+</Member>
+<Member Name="CMD_86" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD86) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_87" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD87) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_88" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD318" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD88) Spare]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZCMD327" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="CMD_89" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD89) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_90" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD90) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_91" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD91) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_92" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD92) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_93" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD93) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_94" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD94) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_95" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD95) Spare]]>
+</Description>
+</Member>
+<Member Name="CMD_96" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZCMD327" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(CMD96) Spare]]>
+</Description>
+</Member>
+</Members>
+</DataType>
+<DataType Use="Target" Name="SEQ" Family="NoFamily" Class="User">
+<Members>
+<Member Name="C1" DataType="CMD1" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Commands 1 thru 32]]>
+</Description>
+</Member>
+<Member Name="C2" DataType="CMD2" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comands 33 thru 64]]>
+</Description>
+</Member>
+<Member Name="C3" DataType="CMD3" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Comands 65 thru 96]]>
+</Description>
+</Member>
+<Member Name="V1" DataType="Valves_1" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valves 1 thru 32]]>
+</Description>
+</Member>
+<Member Name="V2" DataType="Valves_2" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valves 33 thru 64]]>
+</Description>
+</Member>
+<Member Name="V3" DataType="Valves_3" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Valves 65 thru 96]]>
+</Description>
+</Member>
+<Member Name="INT_IN" DataType="DINT" Dimension="0" Radix="Decimal" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Sequence Interlocks from other sequencers IN]]>
+</Description>
+</Member>
+<Member Name="INT_OUT" DataType="DINT" Dimension="0" Radix="Decimal" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Sequence Interlocks to other sequencers Out]]>
+</Description>
+</Member>
+<Member Name="MGS" DataType="DINT" Dimension="0" Radix="Decimal" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Step Messages]]>
+</Description>
+</Member>
+<Member Name="FLT" DataType="DINT" Dimension="0" Radix="Decimal" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Step timeout setpoint]]>
+</Description>
+</Member>
+<Member Name="ST" DataType="DINT" Dimension="0" Radix="Decimal" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Step Time setpoint]]>
+</Description>
+</Member>
+<Member Name="MTFR" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Material Transfer speed setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="BPR" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Back Pressure Reguator setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="AGI" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Agitator Speed setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="MTFRF" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Material Transfer Flush Air/Solvent setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="LA" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Launch Air setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="CA" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Catch Air setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="ASP1" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[SpareAnalog 1 setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="ASP2" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[SpareAnalog 2 setpoint (Analog Output)]]>
+</Description>
+</Member>
+<Member Name="SPR" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Supply Pressure setpoint Relative (Pressure Transmitter Input)]]>
+</Description>
+</Member>
+<Member Name="RPR" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Return Pressure setpoint Relative (Pressure Transmitter Input)]]>
+</Description>
+</Member>
+<Member Name="EPR" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[End of Line Pressure setpoint Relative (Pressure Transmitter Input)]]>
+</Description>
+</Member>
+<Member Name="LVLR" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Container Level setpoint Relative (Level Transmitter Input)]]>
+</Description>
+</Member>
+<Member Name="FLWR" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Flow Count setpoint Relative (Flow Meter Input)]]>
+</Description>
+</Member>
+<Member Name="AS1R" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Analog Spare 1 setpoint Relative (Analog Input)]]>
+</Description>
+</Member>
+<Member Name="AS2R" DataType="REAL" Dimension="0" Radix="Float" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Analog Spare 2 setpoint Relative (Analog Input)]]>
+</Description>
+</Member>
+</Members>
+<Dependencies>
+<Dependency Type="DataType" Name="CMD1"/>
+<Dependency Type="DataType" Name="CMD2"/>
+<Dependency Type="DataType" Name="CMD3"/>
+<Dependency Type="DataType" Name="Valves_1"/>
+<Dependency Type="DataType" Name="Valves_2"/>
+<Dependency Type="DataType" Name="Valves_3"/>
+</Dependencies>
+</DataType>
+<DataType Name="Valves_1" Family="NoFamily" Class="User">
+<Members>
+<Member Name="ZZZZZZZZZZValves_10" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="V00" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V00) Spare]]>
+</Description>
+</Member>
+<Member Name="MTFR_R" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V01) Material Transfer Run]]>
+</Description>
+</Member>
+<Member Name="MTFR_RS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V02) Material Transfer Run Slow]]>
+</Description>
+</Member>
+<Member Name="MTFR_RF" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V03) Material Transfer Run Fast]]>
+</Description>
+</Member>
+<Member Name="MTFR_SV" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V04) Material Transfer Suction Valve]]>
+</Description>
+</Member>
+<Member Name="MTFR_SVC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V05) Material Transfer Suction Valve Cycle]]>
+</Description>
+</Member>
+<Member Name="BPR" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V06) Back Pressure Regulator]]>
+</Description>
+</Member>
+<Member Name="SUP" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_10" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V07) Suppressor]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_19" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="MTFR_D" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V08) Material Transfer Dump]]>
+</Description>
+</Member>
+<Member Name="MTFR_FS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V09) Material Transfer Flush Solvent]]>
+</Description>
+</Member>
+<Member Name="MTFR_FA" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V10) Material Transfer Flush Air On]]>
+</Description>
+</Member>
+<Member Name="MTFR_FAH" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V11) Material Transfer Flush Air Hi]]>
+</Description>
+</Member>
+<Member Name="MTFR_FAL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V12) Material Transfer Flush Air Low]]>
+</Description>
+</Member>
+<Member Name="MTFR_FD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V13) Material Transfer Flush Dump]]>
+</Description>
+</Member>
+<Member Name="MTFR_FC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V14) Material Transfer Flush Chop]]>
+</Description>
+</Member>
+<Member Name="MTFR_PL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_19" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V15) Material Transfer Paint In Left]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_118" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="MTFR_PR" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V16) Material Transfer Paint In Right]]>
+</Description>
+</Member>
+<Member Name="MTFR_RL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V17) Material Transfer Return Left]]>
+</Description>
+</Member>
+<Member Name="MTFR_RR" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V18) Material Transfer Return Right]]>
+</Description>
+</Member>
+<Member Name="FLTR_ON" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V19) Filter On]]>
+</Description>
+</Member>
+<Member Name="FLTR_L" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V20) Filter Left]]>
+</Description>
+</Member>
+<Member Name="FLTR_R" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V21) Filter Right]]>
+</Description>
+</Member>
+<Member Name="FLTR_B" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V22) Filter Bypass]]>
+</Description>
+</Member>
+<Member Name="FLTR_FA" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_118" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V23) Filter Flush Air]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_127" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="FLTR_FS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V24) Filter Flush Solvent]]>
+</Description>
+</Member>
+<Member Name="FLTR_FC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V25) Filter Flush Chop]]>
+</Description>
+</Member>
+<Member Name="FLTR_FPRD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V26) Filter Flush Pre Dump]]>
+</Description>
+</Member>
+<Member Name="FLTR_FPOD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V27) Filter Flush Post Dump]]>
+</Description>
+</Member>
+<Member Name="FLTR_LS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V28) Filter Left Supply]]>
+</Description>
+</Member>
+<Member Name="FLTR_RS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V29) Filter Right Supply]]>
+</Description>
+</Member>
+<Member Name="V30" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V30) Spare]]>
+</Description>
+</Member>
+<Member Name="V31" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_127" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V31) Spare]]>
+</Description>
+</Member>
+</Members>
+</DataType>
+<DataType Name="Valves_2" Family="NoFamily" Class="User">
+<Members>
+<Member Name="ZZZZZZZZZZValves_20" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="V32" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V32) Spare]]>
+</Description>
+</Member>
+<Member Name="LSP" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V33) Spare]]>
+</Description>
+</Member>
+<Member Name="LRET" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V34) Launch Return]]>
+</Description>
+</Member>
+<Member Name="LRLS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V35) Launch Release]]>
+</Description>
+</Member>
+<Member Name="LV" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V36) Launch Valve]]>
+</Description>
+</Member>
+<Member Name="LA" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V37) Launch Air]]>
+</Description>
+</Member>
+<Member Name="LAHI" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V38) Launch AirHi]]>
+</Description>
+</Member>
+<Member Name="LALO" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_20" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V39) Launch AirLo]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_29" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="LSOL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V40) Launch Solvent]]>
+</Description>
+</Member>
+<Member Name="LC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V41) Launch Chop]]>
+</Description>
+</Member>
+<Member Name="LD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V42) Launch Dump]]>
+</Description>
+</Member>
+<Member Name="LCD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V43) Launch CenterDump]]>
+</Description>
+</Member>
+<Member Name="LCYE" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V44) Launch CylExtend]]>
+</Description>
+</Member>
+<Member Name="LCYR" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V45) Launch CylReturn]]>
+</Description>
+</Member>
+<Member Name="LFS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V46) Launch Flush Solvent]]>
+</Description>
+</Member>
+<Member Name="LFC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_29" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V47) Launch Flush Chop]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_218" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="RFV" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V48)  Reverse Flow Valve]]>
+</Description>
+</Member>
+<Member Name="CSP" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V49) Catch Supply]]>
+</Description>
+</Member>
+<Member Name="CRET" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V50) Catch Return]]>
+</Description>
+</Member>
+<Member Name="CRLS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V51) Catch Release]]>
+</Description>
+</Member>
+<Member Name="CLV" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V52) Catch Launch Valve]]>
+</Description>
+</Member>
+<Member Name="CA" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V53) Catch Air]]>
+</Description>
+</Member>
+<Member Name="CAHI" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V54) Catch AirHi]]>
+</Description>
+</Member>
+<Member Name="CALO" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_218" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V55) Catch AirLo]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_227" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="CSOL" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V56) Catch Solvent]]>
+</Description>
+</Member>
+<Member Name="CC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V57) Catch Chop]]>
+</Description>
+</Member>
+<Member Name="CD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V58) Catch Dump]]>
+</Description>
+</Member>
+<Member Name="CCD" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V59) Catch CenterDump]]>
+</Description>
+</Member>
+<Member Name="CCYE" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V60) Catch CylExtend]]>
+</Description>
+</Member>
+<Member Name="CCYR" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V61) Catch CylReturn]]>
+</Description>
+</Member>
+<Member Name="CFS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V62) Catch Flush Solvent]]>
+</Description>
+</Member>
+<Member Name="CFC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_227" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V63) Catch Flush Chop]]>
+</Description>
+</Member>
+</Members>
+</DataType>
+<DataType Name="Valves_3" Family="NoFamily" Class="User">
+<Members>
+<Member Name="ZZZZZZZZZZValves_30" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="AGI_OFF" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V64) Agitator Off]]>
+</Description>
+</Member>
+<Member Name="AGI_ON" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V65) Agitator On]]>
+</Description>
+</Member>
+<Member Name="AGIHI" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V66) Agitator Hi]]>
+</Description>
+</Member>
+<Member Name="AGILO" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V67) Agitator Lo]]>
+</Description>
+</Member>
+<Member Name="V68" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V68) Spare]]>
+</Description>
+</Member>
+<Member Name="V69" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V69) Spare]]>
+</Description>
+</Member>
+<Member Name="SI1" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V70) Solvent Injection1]]>
+</Description>
+</Member>
+<Member Name="SI2" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_30" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V71) Solvent Injection2]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_39" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="V72" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V72) Spare]]>
+</Description>
+</Member>
+<Member Name="V73" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V73) Spare]]>
+</Description>
+</Member>
+<Member Name="CNTR_SBA" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V74) Container SprayBall Air]]>
+</Description>
+</Member>
+<Member Name="CNTR_SBS" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V75) Container SprayBall Sol]]>
+</Description>
+</Member>
+<Member Name="CNTR_SBC" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V76) Container SprayBall Chop]]>
+</Description>
+</Member>
+<Member Name="CNTR_TP" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V77) Container TransferPump]]>
+</Description>
+</Member>
+<Member Name="V78" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V78) Spare]]>
+</Description>
+</Member>
+<Member Name="V79" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_39" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V79) Spare]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_318" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="ASP1" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V80) Analog Spare 1]]>
+</Description>
+</Member>
+<Member Name="ASP2" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V81) Analog Spare 2]]>
+</Description>
+</Member>
+<Member Name="V82" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V82) Spare]]>
+</Description>
+</Member>
+<Member Name="V83" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V83) Spare]]>
+</Description>
+</Member>
+<Member Name="V84" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V84) Spare]]>
+</Description>
+</Member>
+<Member Name="V85" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V85) Spare]]>
+</Description>
+</Member>
+<Member Name="V86" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V86) Spare]]>
+</Description>
+</Member>
+<Member Name="V87" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_318" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V87) Spare]]>
+</Description>
+</Member>
+<Member Name="ZZZZZZZZZZValves_327" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
+<Member Name="V88" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="0" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V88) Spare]]>
+</Description>
+</Member>
+<Member Name="V89" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="1" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V89) Spare]]>
+</Description>
+</Member>
+<Member Name="V90" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="2" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V90) Spare]]>
+</Description>
+</Member>
+<Member Name="V91" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="3" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V91) Spare]]>
+</Description>
+</Member>
+<Member Name="V92" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="4" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V92) Spare]]>
+</Description>
+</Member>
+<Member Name="V93" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="5" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V93) Spare]]>
+</Description>
+</Member>
+<Member Name="V94" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="6" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V94) Spare]]>
+</Description>
+</Member>
+<Member Name="V95" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="ZZZZZZZZZZValves_327" BitNumber="7" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[(V95) Spare]]>
+</Description>
+</Member>
+</Members>
+</DataType>
+</DataTypes>
+</Controller>
+</RSLogix5000Content>

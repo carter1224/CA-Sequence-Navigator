@@ -1,0 +1,32 @@
+<Window x:Class="SequenceNavigator.CompareSequencesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Compare Sequences" Height="220" Width="560" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+  <Grid Margin="12">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="Auto"/>
+    </Grid.ColumnDefinitions>
+
+    <TextBox x:Name="FirstZipBox" Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" IsReadOnly="True"/>
+    <Button Grid.Row="0" Grid.Column="1" Content="Browse..." Padding="12,4" Margin="0,0,0,8"
+            Click="BrowseFirst_Click"/>
+
+    <TextBox x:Name="SecondZipBox" Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" IsReadOnly="True"/>
+    <Button Grid.Row="1" Grid.Column="1" Content="Browse..." Padding="12,4" Margin="0,0,0,8"
+            Click="BrowseSecond_Click"/>
+
+    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"
+                HorizontalAlignment="Right">
+      <Button x:Name="CompareBtn" Content="Compare" Padding="16,4" Margin="0,0,8,0"
+              Click="Compare_Click"/>
+      <Button Content="Cancel" Padding="16,4" Click="Cancel_Click"/>
+    </StackPanel>
+  </Grid>
+</Window>
