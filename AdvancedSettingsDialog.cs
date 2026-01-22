@@ -35,7 +35,7 @@ namespace SequenceNavigator
             }
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(260) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             grid.Children.Add(MakeLabel("Default IP:", 0, 0));
             _ipBox = MakeTextBox(settings.DefaultIp, 0, 1, grid);
@@ -62,7 +62,7 @@ namespace SequenceNavigator
 
             grid.Children.Add(MakeLabel("Log Path:", 10, 0));
             _logPathBox = MakeTextBox(settings.LogPath, 10, 1, grid);
-            var browseBtn = new Button { Content = "Browse", Width = 70 };
+            var browseBtn = new Button { Content = "Browse", MinWidth = 90, Margin = new Thickness(8, 0, 0, 0) };
             browseBtn.Click += BrowseBtn_Click;
             Grid.SetRow(browseBtn, 10);
             Grid.SetColumn(browseBtn, 2);
@@ -80,9 +80,9 @@ namespace SequenceNavigator
                 VerticalAlignment = VerticalAlignment.Center
             };
             var spacer = new FrameworkElement { Width = 20 };
-            var okBtn = new Button { Content = "OK", Width = 90, Margin = new Thickness(8, 0, 0, 0) };
+            var okBtn = new Button { Content = "OK", MinWidth = 90, Margin = new Thickness(8, 0, 0, 0) };
             okBtn.Click += OkBtn_Click;
-            var cancelBtn = new Button { Content = "Cancel", Width = 90, Margin = new Thickness(8, 0, 0, 0) };
+            var cancelBtn = new Button { Content = "Cancel", MinWidth = 90, Margin = new Thickness(8, 0, 0, 0) };
             cancelBtn.Click += (_, _) => DialogResult = false;
 
             footer.Children.Add(buildText);

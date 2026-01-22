@@ -25,7 +25,7 @@
       <Setter Property="Foreground" Value="#666"/>
     </Style>
   </Window.Resources>
-  <Grid Margin="12">
+  <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
@@ -33,55 +33,76 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <Grid Grid.Row="0">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="Auto"/>
-        <ColumnDefinition Width="Auto"/>
-        <ColumnDefinition Width="Auto"/>
-      </Grid.ColumnDefinitions>
-      <TextBox x:Name="PathBox" IsReadOnly="True" Margin="0,0,8,0"/>
-      <Button x:Name="ImportBtn" Grid.Column="1" Content="Upload from PLC" Padding="14,4" Margin="0,0,8,0" Click="ImportFromPlc_Click"/>
-      <Button x:Name="OpenZipBtn" Grid.Column="2" Content="Open ZIP" Padding="14,4" Click="OpenZip_Click"/>
-      <Button x:Name="AdvancedBtn" Grid.Column="3" Content="Advanced Settings" Padding="14,4" Margin="8,0,0,0" Click="AdvancedSettings_Click"/>
-    </Grid>
+    <Border Grid.Row="0" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1" Padding="12" CornerRadius="6">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <TextBox x:Name="PathBox" IsReadOnly="True" Margin="0,0,8,0"/>
+        <Button x:Name="ImportBtn" Grid.Column="1" Content="Upload from PLC" Margin="0,0,8,0" Click="ImportFromPlc_Click"/>
+        <Button x:Name="OpenZipBtn" Grid.Column="2" Content="Open ZIP" Click="OpenZip_Click"/>
+        <Button x:Name="AdvancedBtn" Grid.Column="3" Content="Advanced Settings" Margin="8,0,0,0" Click="AdvancedSettings_Click"/>
+      </Grid>
+    </Border>
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,6">
-      <ComboBox x:Name="JsonPicker" Width="220" Margin="0,0,8,0" SelectionChanged="JsonPicker_SelectionChanged"/>
-      <Button x:Name="PrevBtn" Content="&lt; Prev" Padding="12,4" Click="Prev_Click"/>
-      <Button x:Name="NextBtn" Content="Next >" Padding="12,4" Margin="8,0,0,0" Click="Next_Click"/>
-      <TextBlock x:Name="IndexLabel" FontWeight="Bold" Margin="14,0,0,0" VerticalAlignment="Center"/>
-      <TextBox x:Name="IndexBox" Width="60" Margin="16,0,0,0" VerticalAlignment="Center" KeyDown="IndexBox_KeyDown"/>
-      <Button x:Name="GoBtn" Content="Go" Padding="10,4" Margin="6,0,0,0" Click="Go_Click"/>
-      <ToggleButton x:Name="EditToggle" Content="Edit Mode" Padding="12,4" Margin="12,0,0,0" Unchecked="EditToggle_Unchecked"/>
-      <Button x:Name="ExportBtn" Content="Save Changes" Padding="12,4" Margin="8,0,0,0" Click="ExportZip_Click"/>
-      <Button x:Name="ExportPlcBtn" Content="Download to PLC" Padding="12,4" Margin="8,0,0,0" Click="ExportToPlc_Click"/>
-      <Button x:Name="CompareBtn" Content="Compare Sequences" Padding="12,4" Margin="8,0,0,0" Click="CompareSequences_Click"/>
-      <TextBlock Text="EDIT MODE" Foreground="#B00000" FontWeight="Bold" FontSize="16" Margin="12,0,0,0" VerticalAlignment="Center">
-        <TextBlock.Style>
-          <Style TargetType="TextBlock">
-            <Setter Property="Visibility" Value="Collapsed"/>
-            <Style.Triggers>
-              <DataTrigger Binding="{Binding IsChecked, ElementName=EditToggle}" Value="True">
-                <Setter Property="Visibility" Value="Visible"/>
-                <DataTrigger.EnterActions>
-                  <BeginStoryboard x:Name="EditModeBlink">
-                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                      <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.2" Duration="0:0:0.6"/>
-                    </Storyboard>
-                  </BeginStoryboard>
-                </DataTrigger.EnterActions>
-                <DataTrigger.ExitActions>
-                  <StopStoryboard BeginStoryboardName="EditModeBlink"/>
-                </DataTrigger.ExitActions>
-              </DataTrigger>
-            </Style.Triggers>
-          </Style>
-        </TextBlock.Style>
-      </TextBlock>
-    </StackPanel>
+    <Border Grid.Row="1" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1" Padding="12" CornerRadius="6" Margin="0,10,0,6">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <ComboBox x:Name="JsonPicker" Width="220" Margin="0,0,8,0" SelectionChanged="JsonPicker_SelectionChanged"/>
+        <Button x:Name="PrevBtn" Grid.Column="1" Content="&lt; Prev" Click="Prev_Click"/>
+        <Button x:Name="NextBtn" Grid.Column="2" Content="Next >" Margin="8,0,0,0" Click="Next_Click"/>
+        <TextBlock x:Name="IndexLabel" Grid.Column="3" FontWeight="Bold" Margin="12,0,0,0" VerticalAlignment="Center"/>
+        <TextBox x:Name="IndexBox" Grid.Column="4" Width="60" Margin="12,0,0,0" VerticalAlignment="Center" KeyDown="IndexBox_KeyDown"/>
+        <Button x:Name="GoBtn" Grid.Column="5" Content="Go" Margin="6,0,0,0" Click="Go_Click"/>
+        <ToggleButton x:Name="EditToggle" Grid.Column="6" Content="Edit Mode" Margin="12,0,0,0" Unchecked="EditToggle_Unchecked"/>
+        <Button x:Name="ExportBtn" Grid.Column="7" Content="Save Changes" Margin="8,0,0,0" Click="ExportZip_Click"/>
+        <Button x:Name="ExportPlcBtn" Grid.Column="8" Content="Download to PLC" Margin="8,0,0,0" Click="ExportToPlc_Click"/>
+        <Button x:Name="CompareBtn" Grid.Column="9" Content="Compare Sequences" Margin="8,0,0,0" Click="CompareSequences_Click"/>
+        <TextBlock Grid.Column="10" Text="EDIT MODE" Foreground="#B00000" FontWeight="Bold" FontSize="16"
+                   Margin="12,0,0,0" VerticalAlignment="Center">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Setter Property="Visibility" Value="Collapsed"/>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsChecked, ElementName=EditToggle}" Value="True">
+                  <Setter Property="Visibility" Value="Visible"/>
+                  <DataTrigger.EnterActions>
+                    <BeginStoryboard x:Name="EditModeBlink">
+                      <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.2" Duration="0:0:0.6"/>
+                      </Storyboard>
+                    </BeginStoryboard>
+                  </DataTrigger.EnterActions>
+                  <DataTrigger.ExitActions>
+                    <StopStoryboard BeginStoryboardName="EditModeBlink"/>
+                  </DataTrigger.ExitActions>
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+      </Grid>
+    </Border>
 
-    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,2,0,10">
       <TextBlock x:Name="TagLabel" Margin="0,0,16,0"/>
       <TextBlock x:Name="DefLabel"/>
     </StackPanel>
@@ -97,7 +118,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderThickness="1" BorderBrush="#DDD" Margin="4" Padding="6">
+                <Border Style="{StaticResource CardBorderStyle}">
                   <Border.Background>
                     <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
                       <Binding Path="Value"/>
@@ -109,7 +130,7 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
                     <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBoolean}" Value="True">
@@ -125,9 +146,12 @@
                         </x:Array>
                       </ComboBox.ItemsSource>
                     </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
+                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                             IsEnabled="{Binding IsChecked, ElementName=EditToggle}"
+                             MinWidth="140"
+                             HorizontalAlignment="Stretch">
                       <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNumber}" Value="True">
@@ -171,7 +195,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderThickness="1" BorderBrush="#DDD" Margin="4" Padding="6">
+                <Border Style="{StaticResource CardBorderStyle}">
                   <Border.Background>
                     <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
                       <Binding Path="Value"/>
@@ -183,7 +207,7 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
                     <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBoolean}" Value="True">
@@ -201,7 +225,7 @@
                     </ComboBox>
                     <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNumber}" Value="True">
@@ -245,7 +269,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderThickness="1" BorderBrush="#DDD" Margin="4" Padding="6">
+                <Border Style="{StaticResource CardBorderStyle}">
                   <Border.Background>
                     <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
                       <Binding Path="Value"/>
@@ -257,7 +281,7 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
                     <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBoolean}" Value="True">
@@ -275,7 +299,7 @@
                     </ComboBox>
                     <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNumber}" Value="True">
@@ -319,7 +343,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderThickness="1" BorderBrush="#DDD" Margin="4" Padding="6">
+                <Border Style="{StaticResource CardBorderStyle}">
                   <Border.Background>
                     <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
                       <Binding Path="Value"/>
@@ -331,7 +355,7 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
                     <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBoolean}" Value="True">
@@ -349,7 +373,7 @@
                     </ComboBox>
                     <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNumber}" Value="True">
@@ -393,7 +417,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderThickness="1" BorderBrush="#DDD" Margin="4" Padding="6">
+                <Border Style="{StaticResource CardBorderStyle}">
                   <Border.Background>
                     <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
                       <Binding Path="Value"/>
@@ -405,7 +429,7 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
                     <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBoolean}" Value="True">
@@ -423,7 +447,7 @@
                     </ComboBox>
                     <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNumber}" Value="True">
@@ -467,7 +491,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderThickness="1" BorderBrush="#DDD" Margin="4" Padding="6">
+                <Border Style="{StaticResource CardBorderStyle}">
                   <Border.Background>
                     <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
                       <Binding Path="Value"/>
@@ -479,7 +503,7 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
                     <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBoolean}" Value="True">
@@ -497,7 +521,7 @@
                     </ComboBox>
                     <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNumber}" Value="True">
@@ -536,12 +560,12 @@
           <ItemsControl x:Name="ScalarGrid">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
-                <UniformGrid Columns="3"/>
+                <UniformGrid Columns="4"/>
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderThickness="1" BorderBrush="#DDD" Margin="4" Padding="6">
+                <Border Style="{StaticResource CardBorderStyle}">
                   <Border.Background>
                     <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
                       <Binding Path="Value"/>
@@ -553,7 +577,7 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
                     <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
                       <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBoolean}" Value="True">
@@ -569,9 +593,11 @@
                         </x:Array>
                       </ComboBox.ItemsSource>
                     </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
+                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                             IsEnabled="{Binding IsChecked, ElementName=EditToggle}"
+                             MinWidth="140">
                       <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                           <Setter Property="Visibility" Value="Collapsed"/>
                           <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNumber}" Value="True">
@@ -607,5 +633,6 @@
     </TabControl>
   </Grid>
 </Window>
+
 
 
