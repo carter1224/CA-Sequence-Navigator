@@ -76,7 +76,7 @@ namespace SequenceNavigator
             };
             var buildText = new TextBlock
             {
-                Text = "Build 1.1.0 by Carter Smith",
+                Text = "Build 1.2.0 by Carter Smith",
                 VerticalAlignment = VerticalAlignment.Center
             };
             var spacer = new FrameworkElement { Width = 20 };

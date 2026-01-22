@@ -1,6 +1,6 @@
 # Sequence Navigator
 
-Internal Build 1.1.0 by Carter Smith
+Internal Build 1.2.0 by Carter Smith
 
 Sequence Navigator is an industrial Windows utility for Complete Automation. It provides a focused GUI for engineers to review, edit, and compare SEQ[100] JSON sequence files used in sequence programming. It also supports uploading from PLC and downloading to PLC via bundled helpers.
 
