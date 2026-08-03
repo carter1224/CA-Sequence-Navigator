@@ -15,18 +15,18 @@
     </Grid.ColumnDefinitions>
 
     <TextBox x:Name="FirstZipBox" Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" IsReadOnly="True"/>
-    <Button Grid.Row="0" Grid.Column="1" Content="Browse..." Padding="12,4" Margin="0,0,0,8"
+    <Button Grid.Row="0" Grid.Column="1" Content="Browse..." Margin="0,0,0,8"
             Click="BrowseFirst_Click"/>
 
     <TextBox x:Name="SecondZipBox" Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" IsReadOnly="True"/>
-    <Button Grid.Row="1" Grid.Column="1" Content="Browse..." Padding="12,4" Margin="0,0,0,8"
+    <Button Grid.Row="1" Grid.Column="1" Content="Browse..." Margin="0,0,0,8"
             Click="BrowseSecond_Click"/>
 
     <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"
                 HorizontalAlignment="Right">
-      <Button x:Name="CompareBtn" Content="Compare" Padding="16,4" Margin="0,0,8,0"
+      <Button x:Name="CompareBtn" Content="Compare" Margin="0,0,8,0"
               Click="Compare_Click"/>
-      <Button Content="Cancel" Padding="16,4" Click="Cancel_Click"/>
+      <Button Content="Cancel" Click="Cancel_Click"/>
     </StackPanel>
   </Grid>
 </Window>

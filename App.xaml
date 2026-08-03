@@ -5,7 +5,6 @@
              StartupUri="MainWindow.xaml">
   <Application.Resources>
     <local:ValueHighlightConverter x:Key="ValueHighlightConverter"/>
-    <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 
     <!-- Base theme -->
     <SolidColorBrush x:Key="AppBg" Color="#F6F7FB"/>
@@ -58,16 +57,6 @@
       <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
 
-    <Style TargetType="DataGrid">
-      <Setter Property="RowHeight" Value="30"/>
-      <Setter Property="ColumnHeaderHeight" Value="32"/>
-      <Setter Property="GridLinesVisibility" Value="None"/>
-      <Setter Property="AlternatingRowBackground" Value="#F7F9FC"/>
-      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="Background" Value="{StaticResource PanelBg}"/>
-    </Style>
-
     <Style x:Key="CardBorderStyle" TargetType="Border">
       <Setter Property="CornerRadius" Value="6"/>
       <Setter Property="Padding" Value="8"/>
@@ -83,8 +72,12 @@
       </Setter>
     </Style>
 
+    <!-- Every Button and ToggleButton in the app derives from this. Do not set Width,
+         MinWidth or Padding locally: a local value beats a style setter, which is how
+         the dialogs drifted apart from the main window. -->
     <Style x:Key="BaseButtonStyle" TargetType="ButtonBase">
       <Setter Property="MinHeight" Value="30"/>
+      <Setter Property="MinWidth" Value="90"/>
       <Setter Property="Padding" Value="12,4"/>
       <Setter Property="BorderBrush" Value="{StaticResource ButtonActiveBorder}"/>
       <Setter Property="BorderThickness" Value="1"/>

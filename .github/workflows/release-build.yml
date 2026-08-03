@@ -7,8 +7,11 @@ on:
 permissions:
   contents: write
 
+# Pinned so a tagged release rebuilds byte-for-byte. Bump deliberately, not by drift.
 env:
   PYTHON_VERSION: "3.13.1"
+  PIP_VERSION: "26.2"
+  PYCOMM3_VERSION: "1.2.16"
 
 jobs:
   build:
@@ -49,8 +52,11 @@ jobs:
           Add-Content $pth.FullName "Lib\\site-packages"
           New-Item -ItemType Directory -Path "publish\\python\\Lib\\site-packages" -Force | Out-Null
           Invoke-WebRequest -Uri https://bootstrap.pypa.io/get-pip.py -OutFile get-pip.py
-          & "publish\\python\\python.exe" get-pip.py --no-warn-script-location
-          & "publish\\python\\python.exe" -m pip install --no-warn-script-location pycomm3 -t "publish\\python\\Lib\\site-packages"
+          # get-pip.py itself is unversioned upstream, so pin the pip it installs.
+          & "publish\\python\\python.exe" get-pip.py --no-warn-script-location "pip==$env:PIP_VERSION"
+          if ($LASTEXITCODE -ne 0) { throw "get-pip failed with exit code $LASTEXITCODE" }
+          & "publish\\python\\python.exe" -m pip install --no-warn-script-location "pycomm3==$env:PYCOMM3_VERSION" -t "publish\\python\\Lib\\site-packages"
+          if ($LASTEXITCODE -ne 0) { throw "pycomm3 install failed with exit code $LASTEXITCODE" }
           Remove-Item get-pip.py
 
       - name: Copy content files

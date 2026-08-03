@@ -1,0 +1,47 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.{xaml,csproj}]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# --- Dead code -------------------------------------------------------------
+# Promoted from the default "suggestion" severity, which never appears in build
+# output. These are the rules that would have flagged the unused FormatValue
+# method, the orphaned `spacer` local, and the stale `using System.IO`.
+dotnet_diagnostic.IDE0005.severity = warning   # unnecessary using directive
+dotnet_diagnostic.IDE0051.severity = warning   # unused private member
+dotnet_diagnostic.IDE0052.severity = warning   # unread private member
+dotnet_diagnostic.IDE0059.severity = warning   # unnecessary value assignment
+dotnet_diagnostic.IDE0060.severity = warning   # unused parameter
+
+# --- Correctness -----------------------------------------------------------
+dotnet_diagnostic.CA2016.severity = warning    # forward CancellationToken
+dotnet_diagnostic.CA1806.severity = warning    # ignoring a method's return value
+dotnet_diagnostic.CA2200.severity = warning    # rethrow that loses stack trace
+
+# Culture-sensitive string/number handling matters here: PLC values are parsed
+# and formatted with InvariantCulture on purpose.
+dotnet_diagnostic.CA1304.severity = warning    # specify CultureInfo
+dotnet_diagnostic.CA1305.severity = warning    # specify IFormatProvider
+
+# --- Deliberately left off -------------------------------------------------
+# CA1707: PLC member names (CMD_6, MTFR_FLUSH_P1) legitimately contain underscores.
+dotnet_diagnostic.CA1707.severity = none
