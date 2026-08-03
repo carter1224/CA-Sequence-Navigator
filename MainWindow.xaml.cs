@@ -3,22 +3,32 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Threading;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Microsoft.Win32;
 
 namespace SequenceNavigator
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private readonly List<JsonElement> _seqValues = new();
+        private const int SeqLength = 100;
+
+        // SEQ[0] is deliberately not navigable or editable. The element still exists in
+        // the JSON and is written back to the PLC untouched — the array must stay 100
+        // long — it simply is not reachable from the UI.
+        private const int FirstStep = 1;
+        private const int LastStep = SeqLength - 1;
+        private static readonly TimeSpan MinProcessTimeout = TimeSpan.FromMinutes(3);
         private int _currentIndex;
         private readonly ObservableCollection<FieldItem> _c1Items = new();
         private readonly ObservableCollection<FieldItem> _c2Items = new();
@@ -26,7 +36,7 @@ namespace SequenceNavigator
         private readonly ObservableCollection<FieldItem> _v1Items = new();
         private readonly ObservableCollection<FieldItem> _v2Items = new();
         private readonly ObservableCollection<FieldItem> _v3Items = new();
-        private readonly ObservableCollection<FieldItem> _scalarItems = new();
+        private readonly ObservableCollection<FieldItem> _setpointItems = new();
         private readonly Dictionary<string, string> _zipJsonCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _zipJsonOriginal = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Dictionary<string, string>> _typeDescriptions =
@@ -47,12 +57,11 @@ namespace SequenceNavigator
         private bool _hasPendingEdits;
         private bool _suppressEditToggle;
         private bool _isBusy;
-        private string? _lastIp;
-        private int? _lastEthSlot;
-        private int? _lastCpuSlot;
         private AppSettings _settings = new();
         private bool _showDescriptions = true;
         private bool _highlightActive = true;
+        private bool _isEditMode;
+        private bool _settingsWarningShown;
 
         public MainWindow()
         {
@@ -64,11 +73,10 @@ namespace SequenceNavigator
             V1Grid.ItemsSource = _v1Items;
             V2Grid.ItemsSource = _v2Items;
             V3Grid.ItemsSource = _v3Items;
-            ScalarGrid.ItemsSource = _scalarItems;
+            SetpointGrid.ItemsSource = _setpointItems;
             LoadL5xDescriptions();
             LoadSettings();
-            UpdateNavState();
-            UpdateExportState();
+            RefreshControlStates();
         }
 
         public bool ShowDescriptions
@@ -99,24 +107,106 @@ namespace SequenceNavigator
             }
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            // A helper is mid-transfer; closing now would orphan it while it is still
+            // talking to the controller.
+            if (_isBusy)
+            {
+                MessageBox.Show(
+                    "A PLC transfer is still running. Wait for it to finish before closing.",
+                    "Transfer In Progress",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                e.Cancel = true;
+                return;
+            }
+
+            if (_hasPendingEdits)
+            {
+                var result = MessageBox.Show(
+                    "You have unsaved changes. Save them before closing?",
+                    "Unsaved Changes",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    // Closing anyway after a failed save would discard the very edits
+                    // the user just asked to keep.
+                    if (!SaveZipInPlace(showMessages: true))
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+                else if (result != MessageBoxResult.No)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            base.OnClosing(e);
+        }
+
+        public bool IsEditMode
+        {
+            get => _isEditMode;
+            set
+            {
+                if (_isEditMode == value)
+                {
+                    return;
+                }
+                _isEditMode = value;
+                OnPropertyChanged(nameof(IsEditMode));
+            }
+        }
+
         private bool HasSeqData =>
-            _currentJsonRoot?["value"] is JsonArray arr && arr.Count == 100;
+            _currentJsonRoot?["value"] is JsonArray arr && arr.Count == SeqLength;
 
         private void SetBusy(bool isBusy)
         {
             _isBusy = isBusy;
-            ImportBtn.IsEnabled = !_isBusy;
-            OpenZipBtn.IsEnabled = !_isBusy;
-            AdvancedBtn.IsEnabled = !_isBusy;
-            CompareBtn.IsEnabled = !_isBusy;
-            JsonPicker.IsEnabled = !_isBusy && _zipJsonCache.Count > 0;
-            PrevBtn.IsEnabled = !_isBusy && HasSeqData && _currentIndex > 0;
-            NextBtn.IsEnabled = !_isBusy && HasSeqData && _currentIndex < 99;
-            IndexBox.IsEnabled = !_isBusy && HasSeqData;
-            GoBtn.IsEnabled = !_isBusy && HasSeqData;
-            EditToggle.IsEnabled = !_isBusy && _zipJsonCache.Count > 0;
-            ExportBtn.IsEnabled = !_isBusy && _zipJsonCache.Count > 0;
-            ExportPlcBtn.IsEnabled = !_isBusy && _zipJsonCache.Count > 0;
+            RefreshControlStates();
+        }
+
+        /// <summary>
+        /// The single source of truth for control enablement and the step readout.
+        /// Everything here derives from _isBusy, the cache count, HasSeqData and
+        /// _currentIndex, so it is safe to call after any state change.
+        /// </summary>
+        private void RefreshControlStates()
+        {
+            bool idle = !_isBusy;
+            bool hasZip = _zipJsonCache.Count > 0;
+            bool hasSeq = HasSeqData;
+
+            // Always available unless a helper is running.
+            ImportBtn.IsEnabled = idle;
+            OpenZipBtn.IsEnabled = idle;
+            AdvancedBtn.IsEnabled = idle;
+            CompareBtn.IsEnabled = idle;
+
+            // Need JSON loaded from a ZIP.
+            JsonPicker.IsEnabled = idle && hasZip;
+            EditToggle.IsEnabled = idle && hasZip;
+            ExportBtn.IsEnabled = idle && hasZip;
+            ExportPlcBtn.IsEnabled = idle && hasZip;
+
+            // Need a valid 100-element sequence to navigate.
+            PrevBtn.IsEnabled = idle && hasSeq && _currentIndex > FirstStep;
+            NextBtn.IsEnabled = idle && hasSeq && _currentIndex < LastStep;
+            IndexBox.IsEnabled = idle && hasSeq;
+            GoBtn.IsEnabled = idle && hasSeq;
+
+            IndexLabel.Text = hasSeq ? $"Step {_currentIndex}" : $"Step {FirstStep}";
+            if (!IndexBox.IsFocused)
+            {
+                IndexBox.Text = hasSeq ? _currentIndex.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            }
         }
 
         private void OpenZip_Click(object sender, RoutedEventArgs e)
@@ -125,7 +215,7 @@ namespace SequenceNavigator
             {
                 Title = "Select SEQ ZIP file",
                 Filter = "ZIP Files (*.zip)|*.zip|All Files (*.*)|*.*",
-                InitialDirectory = ResolveInitialDirectory(_settings.LastZipDir)
+                InitialDirectory = UiHelpers.ResolveInitialDirectory(_settings.LastZipDir)
             };
 
             if (dialog.ShowDialog() == true)
@@ -153,7 +243,7 @@ namespace SequenceNavigator
 
         private async void ImportFromPlc_Click(object sender, RoutedEventArgs e)
         {
-            var connDialog = new PlcConnectionDialog(_lastIp, _lastEthSlot, _lastCpuSlot)
+            var connDialog = new PlcConnectionDialog(_settings.PlcIp, _settings.EthSlot, _settings.CpuSlot)
             {
                 Owner = this
             };
@@ -163,17 +253,25 @@ namespace SequenceNavigator
                 return;
             }
 
-            _lastIp = connDialog.IpAddress;
-            _lastEthSlot = connDialog.EthSlot;
-            _lastCpuSlot = connDialog.CpuSlot;
+            // Remember whatever was entered here, not just what Advanced Settings set.
+            var ip = connDialog.IpAddress;
+            var ethSlot = connDialog.EthSlot;
+            var cpuSlot = connDialog.CpuSlot;
+            _settings.PlcIp = ip;
+            _settings.EthSlot = ethSlot;
+            _settings.CpuSlot = cpuSlot;
+            // Persist now: cancelling the save dialog below returns early, and the
+            // address the user just typed should survive that.
+            SaveSettings();
 
-            var defaultName = $"seq_export_{DateTime.Now:yyyyMMdd_HHmmss}.zip";
+            var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
+            var defaultName = $"seq_export_{stamp}.zip";
             var saveDialog = new SaveFileDialog
             {
                 Title = "Save Export ZIP",
                 Filter = "ZIP Files (*.zip)|*.zip|All Files (*.*)|*.*",
                 FileName = defaultName,
-                InitialDirectory = ResolveInitialDirectory(_settings.LastZipDir)
+                InitialDirectory = UiHelpers.ResolveInitialDirectory(_settings.LastZipDir)
             };
 
             if (saveDialog.ShowDialog() != true)
@@ -195,14 +293,20 @@ namespace SequenceNavigator
             SetBusy(true);
             try
             {
-                string args =
-                    $"\"{scriptPath}\" --ip {_lastIp} --eth-slot {_lastEthSlot} --cpu-slot {_lastCpuSlot} " +
-                    $"--out-zip \"{saveDialog.FileName}\" --retries {_settings.RetryCount} " +
-                    $"--retry-delay {_settings.RetryDelaySeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)} " +
-                    $"--timeout {_settings.TimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+                var args = new List<string>
+                {
+                    scriptPath,
+                    "--ip", ip,
+                    "--eth-slot", ethSlot.ToString(CultureInfo.InvariantCulture),
+                    "--cpu-slot", cpuSlot.ToString(CultureInfo.InvariantCulture),
+                    "--out-zip", saveDialog.FileName,
+                    "--retries", _settings.RetryCount.ToString(CultureInfo.InvariantCulture),
+                    "--retry-delay", _settings.RetryDelaySeconds.ToString(CultureInfo.InvariantCulture),
+                    "--timeout", _settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture),
+                };
                 if (_settings.IncludeProgramTags)
                 {
-                    args += " --include-program-tags";
+                    args.Add("--include-program-tags");
                 }
                 var result = await RunProcessAsync(ResolvePythonPath(), args);
 
@@ -238,8 +342,7 @@ namespace SequenceNavigator
                 _zipJsonOriginal.Clear();
                 JsonPicker.ItemsSource = null;
                 JsonPicker.Items.Clear();
-                _currentJsonName = null;
-                _currentJsonRoot = null;
+                ClearSeqContent();
                 _hasPendingEdits = false;
 
                 using var archive = ZipFile.OpenRead(path);
@@ -276,7 +379,7 @@ namespace SequenceNavigator
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            UpdateExportState();
+            RefreshControlStates();
         }
 
         private void JsonPicker_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -297,89 +400,59 @@ namespace SequenceNavigator
 
         private void LoadJsonContent(string name, string json)
         {
+            // Validate into locals first. Committing to _currentJsonName/_currentJsonRoot
+            // before the checks pass would leave the grids rendering the previously loaded
+            // file while pointing every edit at a document we already rejected.
             try
             {
-                _currentJsonName = name;
-                _currentJsonRoot = JsonNode.Parse(json);
-                if (_currentJsonRoot is null)
+                var root = JsonNode.Parse(json);
+                if (root is null)
                 {
                     throw new InvalidOperationException("JSON root is empty.");
                 }
-                using var doc = JsonDocument.Parse(json);
 
-                if (!doc.RootElement.TryGetProperty("value", out var valueElem) ||
-                    valueElem.ValueKind != JsonValueKind.Array)
+                if (root["value"] is not JsonArray values)
                 {
+                    ClearSeqContent();
                     MessageBox.Show("Expected a JSON file with a 'value' array.", "Invalid SEQ File",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
-                _seqValues.Clear();
-                foreach (var item in valueElem.EnumerateArray())
+                if (values.Count != SeqLength)
                 {
-                    _seqValues.Add(item.Clone());
-                }
-
-                if (_seqValues.Count != 100)
-                {
-                    MessageBox.Show("Expected 'value' array length of 100.", "Invalid SEQ File",
+                    ClearSeqContent();
+                    MessageBox.Show($"Expected 'value' array length of {SeqLength}.", "Invalid SEQ File",
                         MessageBoxButton.OK, MessageBoxImage.Error);
-                    _seqValues.Clear();
                     return;
                 }
 
-                TagLabel.Text = "Tag: " + (doc.RootElement.TryGetProperty("source_tag_name", out var tag)
-                    ? tag.GetString() : "");
-                DefLabel.Text = "Definition: " + (doc.RootElement.TryGetProperty("required_definition", out var def)
-                    ? def.GetString() : "");
+                _currentJsonName = name;
+                _currentJsonRoot = root;
 
-                _currentIndex = 0;
+                TagLabel.Text = "Tag: " + ReadStringProperty(root, "source_tag_name");
+                DefLabel.Text = "Definition: " + ReadStringProperty(root, "required_definition");
+
+                _currentIndex = FirstStep;
                 RenderCurrent();
-                UpdateNavState();
+                RefreshControlStates();
             }
             catch (Exception ex)
             {
+                ClearSeqContent();
                 MessageBox.Show("Failed to load JSON:\n" + ex.Message, "Load Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void Prev_Click(object sender, RoutedEventArgs e)
+        private static string ReadStringProperty(JsonNode root, string propertyName)
         {
-            if (_currentIndex > 0)
-            {
-                _currentIndex--;
-                RenderCurrent();
-                UpdateNavState();
-            }
+            return root[propertyName] is JsonValue value && value.TryGetValue<string>(out var text)
+                ? text
+                : string.Empty;
         }
 
-        private void Next_Click(object sender, RoutedEventArgs e)
-        {
-            if (_currentIndex < 99)
-            {
-                _currentIndex++;
-                RenderCurrent();
-                UpdateNavState();
-            }
-        }
-
-        private void UpdateNavState()
-        {
-            bool hasData = HasSeqData;
-            PrevBtn.IsEnabled = !_isBusy && hasData && _currentIndex > 0;
-            NextBtn.IsEnabled = !_isBusy && hasData && _currentIndex < 99;
-            IndexBox.IsEnabled = !_isBusy && hasData;
-            JsonPicker.IsEnabled = !_isBusy && _zipJsonCache.Count > 0;
-            IndexLabel.Text = hasData ? $"Step {_currentIndex + 1}" : "Step 1";
-            if (!IndexBox.IsFocused)
-            {
-                IndexBox.Text = hasData ? (_currentIndex + 1).ToString() : string.Empty;
-            }
-        }
-
-        private void RenderCurrent()
+        private void ClearFieldItems()
         {
             _c1Items.Clear();
             _c2Items.Clear();
@@ -387,7 +460,43 @@ namespace SequenceNavigator
             _v1Items.Clear();
             _v2Items.Clear();
             _v3Items.Clear();
-            _scalarItems.Clear();
+            _setpointItems.Clear();
+        }
+
+        private void ClearSeqContent()
+        {
+            _currentJsonName = null;
+            _currentJsonRoot = null;
+            _currentIndex = FirstStep;
+            ClearFieldItems();
+            TagLabel.Text = string.Empty;
+            DefLabel.Text = string.Empty;
+            RefreshControlStates();
+        }
+
+        private void Prev_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentIndex > FirstStep)
+            {
+                _currentIndex--;
+                RenderCurrent();
+                RefreshControlStates();
+            }
+        }
+
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentIndex < LastStep)
+            {
+                _currentIndex++;
+                RenderCurrent();
+                RefreshControlStates();
+            }
+        }
+
+        private void RenderCurrent()
+        {
+            ClearFieldItems();
             if (!HasSeqData)
             {
                 return;
@@ -397,7 +506,7 @@ namespace SequenceNavigator
             JsonObject? nodeObject = arr[_currentIndex] as JsonObject;
             if (nodeObject == null)
             {
-                _scalarItems.Add(new FieldItem("Value", arr[_currentIndex]?.ToString() ?? string.Empty));
+                _setpointItems.Add(new FieldItem("Value", arr[_currentIndex]?.ToString() ?? string.Empty));
                 return;
             }
 
@@ -424,7 +533,7 @@ namespace SequenceNavigator
                         FillGroup(_v3Items, nodeObject, "V3");
                         break;
                     default:
-                        AddFieldItem(_scalarItems, nodeObject, prop.Key, "SEQ");
+                        AddFieldItem(_setpointItems, nodeObject, prop.Key, "SEQ");
                         break;
                 }
             }
@@ -439,21 +548,27 @@ namespace SequenceNavigator
 
             if (!int.TryParse(IndexBox.Text?.Trim(), out int value))
             {
-                MessageBox.Show("Enter a number from 1 to 100.", "Invalid Index",
+                MessageBox.Show($"Enter a number from {FirstStep} to {LastStep}.", "Invalid Index",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (value < 1 || value > 100)
+            if (value < FirstStep || value > LastStep)
             {
-                MessageBox.Show("Index must be between 1 and 100.", "Invalid Index",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Step 0 is intentionally out of range, not an oversight.
+                MessageBox.Show(
+                    value == 0
+                        ? $"Step 0 cannot be viewed or edited. Enter {FirstStep} to {LastStep}."
+                        : $"Index must be between {FirstStep} and {LastStep}.",
+                    "Invalid Index",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
             }
 
-            _currentIndex = value - 1;
+            _currentIndex = value;
             RenderCurrent();
-            UpdateNavState();
+            RefreshControlStates();
         }
 
         private void IndexBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -528,62 +643,74 @@ namespace SequenceNavigator
             target.Add(new FieldItem(key, node?.ToString() ?? string.Empty, description: description));
         }
 
-        private void SetBooleanValue(JsonObject parent, string key, string rawValue)
+        private bool SetBooleanValue(JsonObject parent, string key, string rawValue)
         {
-            bool value = string.Equals(rawValue, "true", StringComparison.OrdinalIgnoreCase);
+            if (!bool.TryParse(rawValue, out bool value))
+            {
+                WarnRejectedValue(key, rawValue, "true or false");
+                return false;
+            }
+
             parent[key] = value;
             _hasPendingEdits = true;
             UpdateJsonCache();
+            return true;
         }
 
-        private void SetNumberValue(JsonObject parent, string key, string rawValue, bool isInteger)
+        private bool SetNumberValue(JsonObject parent, string key, string rawValue, bool isInteger)
         {
             if (isInteger)
             {
-                if (int.TryParse(rawValue, System.Globalization.NumberStyles.Integer,
+                if (!int.TryParse(rawValue, System.Globalization.NumberStyles.Integer,
                     System.Globalization.CultureInfo.InvariantCulture, out int intValue))
                 {
-                    parent[key] = intValue;
-                    _hasPendingEdits = true;
-                    UpdateJsonCache();
+                    WarnRejectedValue(key, rawValue, "a whole number");
+                    return false;
                 }
+                parent[key] = intValue;
             }
             else
             {
-                if (double.TryParse(rawValue, System.Globalization.NumberStyles.Float,
+                if (!double.TryParse(rawValue, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out double dblValue))
                 {
-                    parent[key] = dblValue;
-                    _hasPendingEdits = true;
-                    UpdateJsonCache();
+                    WarnRejectedValue(key, rawValue, "a number");
+                    return false;
                 }
+                parent[key] = dblValue;
             }
+
+            _hasPendingEdits = true;
+            UpdateJsonCache();
+            return true;
         }
 
-        private static string FormatValue(JsonElement value)
+        // Queued rather than shown inline: this runs from inside a binding update, and a
+        // modal dialog there fights with the focus change that triggered it.
+        private void WarnRejectedValue(string key, string rawValue, string expected)
         {
-            return value.ValueKind switch
-            {
-                JsonValueKind.True => "true",
-                JsonValueKind.False => "false",
-                JsonValueKind.String => value.GetString() ?? string.Empty,
-                JsonValueKind.Number => value.ToString(),
-                JsonValueKind.Null => "null",
-                _ => value.ToString(),
-            };
+            Dispatcher.BeginInvoke(new Action(() =>
+                MessageBox.Show(
+                    $"'{rawValue}' is not {expected}. {key} was left unchanged.",
+                    "Invalid Value",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning)));
         }
 
         private void LoadL5xDescriptions()
         {
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var l5xPath = Path.Combine(baseDir, "SEQ_DataType.L5X");
+
+            // Not shipped alongside the exe: fields fall back to showing bare member
+            // names, which is a supported configuration rather than a failure.
+            if (!File.Exists(l5xPath))
+            {
+                return;
+            }
+
             try
             {
-                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                var l5xPath = Path.Combine(baseDir, "SEQ_DataType.L5X");
-                if (!File.Exists(l5xPath))
-                {
-                    return;
-                }
-
                 var doc = XDocument.Load(l5xPath);
                 foreach (var dataType in doc.Descendants("DataType"))
                 {
@@ -626,8 +753,17 @@ namespace SequenceNavigator
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                // The file is present but unreadable. Dropping every description without
+                // a word looks like the feature is broken, so say so once.
+                Dispatcher.BeginInvoke(new Action(() =>
+                    MessageBox.Show(
+                        "Field descriptions could not be read from SEQ_DataType.L5X, so fields " +
+                        $"will show tag names only.\n\n{ex.Message}",
+                        "Descriptions Unavailable",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning)));
             }
         }
 
@@ -654,21 +790,15 @@ namespace SequenceNavigator
             _zipJsonCache[_currentJsonName] = _currentJsonRoot.ToJsonString(options);
         }
 
-        private void UpdateExportState()
+        private void EditToggle_Checked(object sender, RoutedEventArgs e)
         {
-            bool hasData = _zipJsonCache.Count > 0;
-            ExportBtn.IsEnabled = !_isBusy && hasData;
-            EditToggle.IsEnabled = !_isBusy && hasData;
-            GoBtn.IsEnabled = !_isBusy && hasData;
-            ImportBtn.IsEnabled = !_isBusy;
-            OpenZipBtn.IsEnabled = !_isBusy;
-            ExportPlcBtn.IsEnabled = !_isBusy && hasData;
-            AdvancedBtn.IsEnabled = !_isBusy;
-            CompareBtn.IsEnabled = !_isBusy;
+            IsEditMode = true;
         }
 
         private void EditToggle_Unchecked(object sender, RoutedEventArgs e)
         {
+            IsEditMode = false;
+
             if (_suppressEditToggle || !_hasPendingEdits)
             {
                 return;
@@ -745,7 +875,7 @@ namespace SequenceNavigator
                 }
             }
 
-            var connDialog = new PlcConnectionDialog(_lastIp, _lastEthSlot, _lastCpuSlot)
+            var connDialog = new PlcConnectionDialog(_settings.PlcIp, _settings.EthSlot, _settings.CpuSlot)
             {
                 Owner = this
             };
@@ -755,9 +885,14 @@ namespace SequenceNavigator
                 return;
             }
 
-            _lastIp = connDialog.IpAddress;
-            _lastEthSlot = connDialog.EthSlot;
-            _lastCpuSlot = connDialog.CpuSlot;
+            // Remember whatever was entered here, not just what Advanced Settings set.
+            var ip = connDialog.IpAddress;
+            var ethSlot = connDialog.EthSlot;
+            var cpuSlot = connDialog.CpuSlot;
+            _settings.PlcIp = ip;
+            _settings.EthSlot = ethSlot;
+            _settings.CpuSlot = cpuSlot;
+            SaveSettings();
 
             var scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seq_importer.py");
             if (!File.Exists(scriptPath))
@@ -770,11 +905,17 @@ namespace SequenceNavigator
             SetBusy(true);
             try
             {
-                string args =
-                    $"\"{scriptPath}\" --ip {_lastIp} --eth-slot {_lastEthSlot} --cpu-slot {_lastCpuSlot} " +
-                    $"--zip \"{_zipPath}\" --retries {_settings.RetryCount} " +
-                    $"--retry-delay {_settings.RetryDelaySeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)} " +
-                    $"--timeout {_settings.TimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+                var args = new List<string>
+                {
+                    scriptPath,
+                    "--ip", ip,
+                    "--eth-slot", ethSlot.ToString(CultureInfo.InvariantCulture),
+                    "--cpu-slot", cpuSlot.ToString(CultureInfo.InvariantCulture),
+                    "--zip", _zipPath,
+                    "--retries", _settings.RetryCount.ToString(CultureInfo.InvariantCulture),
+                    "--retry-delay", _settings.RetryDelaySeconds.ToString(CultureInfo.InvariantCulture),
+                    "--timeout", _settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture),
+                };
                 var result = await RunProcessAsync(ResolvePythonPath(), args);
 
                 if (result.ExitCode != 0)
@@ -873,32 +1014,96 @@ namespace SequenceNavigator
             }
         }
 
-        private async Task<ProcessResult> RunProcessAsync(string fileName, string arguments)
+        // Arguments are passed as a discrete list rather than one concatenated string so
+        // that a value typed into a dialog cannot split itself into extra arguments.
+        private async Task<ProcessResult> RunProcessAsync(string fileName, IReadOnlyList<string> arguments)
         {
             var psi = new ProcessStartInfo
             {
                 FileName = fileName,
-                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
+            foreach (var argument in arguments)
+            {
+                psi.ArgumentList.Add(argument);
+            }
 
             using var process = new Process { StartInfo = psi };
             process.Start();
 
             var stdoutTask = process.StandardOutput.ReadToEndAsync();
             var stderrTask = process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+
+            var timeout = ResolveProcessTimeout();
+            using var cts = new CancellationTokenSource(timeout);
+            try
+            {
+                await process.WaitForExitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                TryKill(process);
+                var partialOut = await ReadOrEmpty(stdoutTask);
+                var partialErr = await ReadOrEmpty(stderrTask);
+                if (_settings.EnableDebugLog)
+                {
+                    WriteDebugLog(
+                        $"TIMEOUT after {timeout.TotalSeconds:N0}s: {fileName} " +
+                        $"{string.Join(" ", arguments)}\n{partialOut}\n{partialErr}\n");
+                }
+                throw new TimeoutException(
+                    $"The helper script did not finish within {timeout.TotalSeconds:N0} seconds and was stopped." +
+                    (string.IsNullOrWhiteSpace(partialErr) ? string.Empty : "\n\n" + partialErr));
+            }
 
             var stdout = await stdoutTask;
             var stderr = await stderrTask;
             if (_settings.EnableDebugLog)
             {
-                WriteDebugLog($"Command: {fileName} {arguments}\n{stdout}\n{stderr}\n");
+                WriteDebugLog($"Command: {fileName} {string.Join(" ", arguments)}\n{stdout}\n{stderr}\n");
             }
             return new ProcessResult(process.ExitCode, stdout, stderr);
+        }
+
+        // A backstop for a wedged helper, not a performance budget: scaled off the retry
+        // settings so raising them doesn't strand this value, with a floor generous enough
+        // that a slow-but-working transfer is never killed.
+        private TimeSpan ResolveProcessTimeout()
+        {
+            var attempts = Math.Max(1, _settings.RetryCount);
+            var perAttempt = Math.Max(0, _settings.TimeoutSeconds) + Math.Max(0, _settings.RetryDelaySeconds);
+            var scaled = TimeSpan.FromSeconds(attempts * perAttempt * 3);
+            return scaled > MinProcessTimeout ? scaled : MinProcessTimeout;
+        }
+
+        private static void TryKill(Process process)
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+            }
+            catch
+            {
+                // Already exited, or we lost the race with it exiting. Nothing to do.
+            }
+        }
+
+        private static async Task<string> ReadOrEmpty(Task<string> readTask)
+        {
+            try
+            {
+                return await readTask;
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         private static string ResolvePythonPath()
@@ -929,27 +1134,51 @@ namespace SequenceNavigator
                 }
                 File.AppendAllText(logPath, text);
             }
-            catch
+            catch (Exception)
             {
+                // Deliberately swallowed, and the one place that is right: this IS the
+                // logger, so there is nowhere to report to, and a failed debug write must
+                // never break the PLC transfer that triggered it.
             }
         }
 
         private void LoadSettings()
         {
             _settings = AppSettings.Load();
+            if (AppSettings.LastError != null)
+            {
+                // Running on defaults silently looks like the app forgot the user's setup.
+                WarnOnce($"Saved settings could not be loaded, so defaults are in use.\n\n{AppSettings.LastError}",
+                    "Settings Not Loaded");
+            }
             ApplySettings();
         }
 
         private void SaveSettings()
         {
-            AppSettings.Save(_settings);
+            if (!AppSettings.Save(_settings))
+            {
+                WarnOnce($"Settings could not be saved, so preferences will not persist.\n\n{AppSettings.LastError}",
+                    "Settings Not Saved");
+            }
+        }
+
+        // SaveSettings runs on nearly every action, so a broken settings folder would
+        // otherwise produce a dialog per click. Warn once and stay quiet after that.
+        private void WarnOnce(string message, string caption)
+        {
+            if (!_settingsWarningShown)
+            {
+                _settingsWarningShown = true;
+                Dispatcher.BeginInvoke(new Action(() =>
+                    MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning)));
+            }
         }
 
         private void ApplySettings()
         {
-            _lastIp = _settings.DefaultIp;
-            _lastEthSlot = _settings.DefaultEthSlot;
-            _lastCpuSlot = _settings.DefaultCpuSlot;
+            // The PLC connection is read straight from _settings wherever it is needed,
+            // so there is no separate copy here to fall out of step with the saved file.
             ShowDescriptions = _settings.ShowDescriptions;
             HighlightActive = _settings.HighlightActive;
         }
@@ -996,9 +1225,11 @@ namespace SequenceNavigator
             var allNames = new SortedSet<string>(firstMap.Keys, StringComparer.OrdinalIgnoreCase);
             allNames.UnionWith(secondMap.Keys);
 
+            // Formatted with InvariantCulture throughout: reports get compared between
+            // machines, so dates and sizes must not shift with the local locale.
             var sb = new StringBuilder();
             sb.AppendLine("Sequence Comparison Report");
-            sb.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             AppendZipInfo(sb, "Zip A", firstZip);
             AppendZipInfo(sb, "Zip B", secondZip);
             sb.AppendLine("============================================================");
@@ -1012,7 +1243,7 @@ namespace SequenceNavigator
                 if (!hasA)
                 {
                     sb.AppendLine("============================================================");
-                    sb.AppendLine($"JSON: {Path.GetFileName(name)}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"JSON: {Path.GetFileName(name)}");
                     sb.AppendLine("Missing in Zip A.");
                     sb.AppendLine();
                     continue;
@@ -1021,7 +1252,7 @@ namespace SequenceNavigator
                 if (!hasB)
                 {
                     sb.AppendLine("============================================================");
-                    sb.AppendLine($"JSON: {Path.GetFileName(name)}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"JSON: {Path.GetFileName(name)}");
                     sb.AppendLine("Missing in Zip B.");
                     sb.AppendLine();
                     continue;
@@ -1035,18 +1266,19 @@ namespace SequenceNavigator
                 if (diffs.Count > 0)
                 {
                     sb.AppendLine("============================================================");
-                    sb.AppendLine($"JSON: {Path.GetFileName(name)}");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"JSON: {Path.GetFileName(name)}");
                     sb.AppendLine("Differences:");
                     foreach (var diff in diffs)
                     {
-                        sb.AppendLine("  - " + diff);
+                        sb.AppendLine("  - " + AnnotateUnreachableStep(diff));
                     }
                     sb.AppendLine();
                 }
             }
 
             var outputDir = Path.GetDirectoryName(firstZip) ?? AppDomain.CurrentDomain.BaseDirectory;
-            var reportName = $"seq_compare_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+            var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
+            var reportName = $"seq_compare_{stamp}.txt";
             var reportPath = Path.Combine(outputDir, reportName);
             if (!sb.ToString().Contains("Differences:"))
             {
@@ -1056,14 +1288,27 @@ namespace SequenceNavigator
             return reportPath;
         }
 
+        /// <summary>
+        /// Step 0 is excluded from the UI, so a difference there is real but cannot be
+        /// opened and inspected. Marking it keeps the information visible while making
+        /// clear why the step won't appear when navigating.
+        /// </summary>
+        private static string AnnotateUnreachableStep(string diff)
+        {
+            const string step0Prefix = "$.value[0]";
+            return diff.StartsWith(step0Prefix, StringComparison.Ordinal)
+                ? diff + "   [step 0 - not viewable in the UI; inspect the JSON directly]"
+                : diff;
+        }
+
         private static void AppendZipInfo(StringBuilder sb, string label, string zipPath)
         {
             var info = new FileInfo(zipPath);
-            sb.AppendLine($"{label}: {zipPath}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{label}: {zipPath}");
             if (info.Exists)
             {
-                sb.AppendLine($"  Size: {info.Length:N0} bytes");
-                sb.AppendLine($"  Modified: {info.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Size: {info.Length:N0} bytes");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"  Modified: {info.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
             }
         }
 
@@ -1150,18 +1395,6 @@ namespace SequenceNavigator
             diffs.Add($"{path}: type mismatch ({a.GetType().Name} vs {b.GetType().Name})");
         }
 
-        private static string? ResolveInitialDirectory(params string?[] candidates)
-        {
-            foreach (var candidate in candidates)
-            {
-                if (!string.IsNullOrWhiteSpace(candidate) && Directory.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-            return null;
-        }
-
         private void OnPropertyChanged(string name) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
@@ -1173,18 +1406,20 @@ namespace SequenceNavigator
     public sealed class FieldItem : INotifyPropertyChanged
     {
         private string _value;
-        private readonly Action<string>? _valueSetter;
+        private string _lastGoodValue;
+        private readonly Func<string, bool>? _valueSetter;
 
         public FieldItem(
             string name,
             string value,
             bool isBoolean = false,
             bool isNumber = false,
-            Action<string>? valueSetter = null,
+            Func<string, bool>? valueSetter = null,
             string? description = null)
         {
             Name = name;
             _value = value;
+            _lastGoodValue = value;
             IsBoolean = isBoolean;
             IsNumber = isNumber;
             _valueSetter = valueSetter;
@@ -1207,7 +1442,22 @@ namespace SequenceNavigator
                     return;
                 }
                 _value = value;
-                _valueSetter?.Invoke(value);
+
+                if (_valueSetter != null && !_valueSetter(value))
+                {
+                    // The edit was rejected, so the backing JSON still holds the old value.
+                    // Snap the display back to match it instead of leaving the two out of
+                    // sync. Deferred so WPF finishes the current binding update first —
+                    // a synchronous notification here can leave the stale text on screen.
+                    Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
+                    {
+                        _value = _lastGoodValue;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
+                    }));
+                    return;
+                }
+
+                _lastGoodValue = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
             }
         }

@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,7 +10,8 @@ namespace SequenceNavigator
         private readonly TextBox _ethBox;
         private readonly TextBox _cpuBox;
 
-        public PlcConnectionDialog(string? ip, int? ethSlot, int? cpuSlot)
+        // Values always come from AppSettings, which owns the install-time defaults.
+        public PlcConnectionDialog(string ip, int ethSlot, int cpuSlot)
         {
             Title = "PLC Connection";
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -29,23 +29,14 @@ namespace SequenceNavigator
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220) });
 
-            grid.Children.Add(MakeLabel("PLC IP:", 0, 0));
-            _ipBox = new TextBox { Text = ip ?? "192.168.1.11" };
-            Grid.SetRow(_ipBox, 0);
-            Grid.SetColumn(_ipBox, 1);
-            grid.Children.Add(_ipBox);
+            UiHelpers.MakeLabel(grid, "PLC IP:", 0, 0);
+            _ipBox = UiHelpers.MakeTextBox(grid, ip, 0, 1);
 
-            grid.Children.Add(MakeLabel("Ethernet Slot:", 1, 0));
-            _ethBox = new TextBox { Text = (ethSlot ?? 1).ToString(CultureInfo.InvariantCulture) };
-            Grid.SetRow(_ethBox, 1);
-            Grid.SetColumn(_ethBox, 1);
-            grid.Children.Add(_ethBox);
+            UiHelpers.MakeLabel(grid, "Ethernet Slot:", 1, 0);
+            _ethBox = UiHelpers.MakeTextBox(grid, ethSlot.ToString(CultureInfo.InvariantCulture), 1, 1);
 
-            grid.Children.Add(MakeLabel("Controller Slot:", 2, 0));
-            _cpuBox = new TextBox { Text = (cpuSlot ?? 0).ToString(CultureInfo.InvariantCulture) };
-            Grid.SetRow(_cpuBox, 2);
-            Grid.SetColumn(_cpuBox, 1);
-            grid.Children.Add(_cpuBox);
+            UiHelpers.MakeLabel(grid, "Controller Slot:", 2, 0);
+            _cpuBox = UiHelpers.MakeTextBox(grid, cpuSlot.ToString(CultureInfo.InvariantCulture), 2, 1);
 
             var buttonPanel = new StackPanel
             {
@@ -53,9 +44,9 @@ namespace SequenceNavigator
                 HorizontalAlignment = HorizontalAlignment.Right,
                 Margin = new Thickness(0, 12, 0, 0)
             };
-            var okBtn = new Button { Content = "OK", Width = 80, Margin = new Thickness(0, 0, 8, 0) };
+            var okBtn = new Button { Content = "OK", Margin = new Thickness(0, 0, 8, 0) };
             okBtn.Click += OkBtn_Click;
-            var cancelBtn = new Button { Content = "Cancel", Width = 80, IsCancel = true };
+            var cancelBtn = new Button { Content = "Cancel", IsCancel = true };
             cancelBtn.Click += (_, _) => DialogResult = false;
             buttonPanel.Children.Add(okBtn);
             buttonPanel.Children.Add(cancelBtn);
@@ -67,6 +58,7 @@ namespace SequenceNavigator
             Content = grid;
         }
 
+
         public string IpAddress { get; private set; } = string.Empty;
         public int EthSlot { get; private set; }
         public int CpuSlot { get; private set; }
@@ -74,9 +66,9 @@ namespace SequenceNavigator
         private void OkBtn_Click(object? sender, RoutedEventArgs e)
         {
             string ip = _ipBox.Text.Trim();
-            if (string.IsNullOrWhiteSpace(ip))
+            if (!PlcAddress.IsValid(ip))
             {
-                MessageBox.Show("Enter a PLC IP address.", "Invalid IP",
+                MessageBox.Show("Enter a valid PLC IPv4 address or hostname.", "Invalid Address",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -99,14 +91,6 @@ namespace SequenceNavigator
             EthSlot = ethSlot;
             CpuSlot = cpuSlot;
             DialogResult = true;
-        }
-
-        private static Label MakeLabel(string text, int row, int col)
-        {
-            var label = new Label { Content = text, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetRow(label, row);
-            Grid.SetColumn(label, col);
-            return label;
         }
     }
 }

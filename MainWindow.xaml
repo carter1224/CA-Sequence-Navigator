@@ -24,7 +24,86 @@
       <Setter Property="FontSize" Value="11"/>
       <Setter Property="Foreground" Value="#666"/>
     </Style>
+
+    <!-- Shared by every SEQ group tab. Declared after the styles above because
+         StaticResource resolves in parse order. -->
+    <ItemsPanelTemplate x:Key="FieldItemsPanel">
+      <UniformGrid Columns="4"/>
+    </ItemsPanelTemplate>
+
+    <DataTemplate x:Key="FieldItemTemplate">
+      <Border Style="{StaticResource CardBorderStyle}">
+        <Border.Background>
+          <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
+            <Binding Path="Value"/>
+            <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
+          </MultiBinding>
+        </Border.Background>
+        <StackPanel>
+          <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
+          <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
+
+          <!-- Boolean fields: dropdown. The array stays inline so each card gets its
+               own instance rather than every ComboBox sharing one collection view. -->
+          <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}"
+                    IsEnabled="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Window}}">
+            <ComboBox.Style>
+              <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsBoolean}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </ComboBox.Style>
+            <ComboBox.ItemsSource>
+              <x:Array Type="sys:String">
+                <sys:String>true</sys:String>
+                <sys:String>false</sys:String>
+              </x:Array>
+            </ComboBox.ItemsSource>
+          </ComboBox>
+
+          <!-- Numeric fields: editable text box. -->
+          <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                   IsEnabled="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Window}}"
+                   MinWidth="140"
+                   HorizontalAlignment="Stretch">
+            <TextBox.Style>
+              <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsNumber}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBox.Style>
+          </TextBox>
+
+          <!-- Anything else: read-only. -->
+          <TextBlock Text="{Binding Value}">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Style.Triggers>
+                  <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                      <Condition Binding="{Binding IsBoolean}" Value="False"/>
+                      <Condition Binding="{Binding IsNumber}" Value="False"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Visibility" Value="Visible"/>
+                  </MultiDataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
+        </StackPanel>
+      </Border>
+    </DataTemplate>
   </Window.Resources>
+
   <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
@@ -71,8 +150,9 @@
         <Button x:Name="NextBtn" Grid.Column="2" Content="Next >" Margin="8,0,0,0" Click="Next_Click"/>
         <TextBlock x:Name="IndexLabel" Grid.Column="3" FontWeight="Bold" Margin="12,0,0,0" VerticalAlignment="Center"/>
         <TextBox x:Name="IndexBox" Grid.Column="4" Width="60" Margin="12,0,0,0" VerticalAlignment="Center" KeyDown="IndexBox_KeyDown"/>
-        <Button x:Name="GoBtn" Grid.Column="5" Content="Go" Margin="6,0,0,0" Click="Go_Click"/>
-        <ToggleButton x:Name="EditToggle" Grid.Column="6" Content="Edit Mode" Margin="12,0,0,0" Unchecked="EditToggle_Unchecked"/>
+        <Button x:Name="GoBtn" Grid.Column="5" Content="Go" Margin="8,0,0,0" Click="Go_Click"/>
+        <ToggleButton x:Name="EditToggle" Grid.Column="6" Content="Edit Mode" Margin="12,0,0,0"
+                      Checked="EditToggle_Checked" Unchecked="EditToggle_Unchecked"/>
         <Button x:Name="ExportBtn" Grid.Column="7" Content="Save Changes" Margin="8,0,0,0" Click="ExportZip_Click"/>
         <Button x:Name="ExportPlcBtn" Grid.Column="8" Content="Download to PLC" Margin="8,0,0,0" Click="ExportToPlc_Click"/>
         <Button x:Name="CompareBtn" Grid.Column="9" Content="Compare Sequences" Margin="8,0,0,0" Click="CompareSequences_Click"/>
@@ -110,529 +190,59 @@
     <TabControl Grid.Row="3" x:Name="SeqTabs">
       <TabItem Header="C1">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <ItemsControl x:Name="C1Grid">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="4"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Style="{StaticResource CardBorderStyle}">
-                  <Border.Background>
-                    <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
-                      <Binding Path="Value"/>
-                      <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                    </MultiBinding>
-                  </Border.Background>
-                  <StackPanel>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
-                    <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
-                    <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ComboBox.Style>
-                      <ComboBox.ItemsSource>
-                        <x:Array Type="sys:String">
-                          <sys:String>true</sys:String>
-                          <sys:String>false</sys:String>
-                        </x:Array>
-                      </ComboBox.ItemsSource>
-                    </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                             IsEnabled="{Binding IsChecked, ElementName=EditToggle}"
-                             MinWidth="140"
-                             HorizontalAlignment="Stretch">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Text="{Binding Value}">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <MultiDataTrigger>
-                              <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsBoolean}" Value="False"/>
-                                <Condition Binding="{Binding IsNumber}" Value="False"/>
-                              </MultiDataTrigger.Conditions>
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </MultiDataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <ItemsControl x:Name="C1Grid"
+                        ItemsPanel="{StaticResource FieldItemsPanel}"
+                        ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
 
       <TabItem Header="C2">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <ItemsControl x:Name="C2Grid">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="4"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Style="{StaticResource CardBorderStyle}">
-                  <Border.Background>
-                    <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
-                      <Binding Path="Value"/>
-                      <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                    </MultiBinding>
-                  </Border.Background>
-                  <StackPanel>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
-                    <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
-                    <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ComboBox.Style>
-                      <ComboBox.ItemsSource>
-                        <x:Array Type="sys:String">
-                          <sys:String>true</sys:String>
-                          <sys:String>false</sys:String>
-                        </x:Array>
-                      </ComboBox.ItemsSource>
-                    </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Text="{Binding Value}">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <MultiDataTrigger>
-                              <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsBoolean}" Value="False"/>
-                                <Condition Binding="{Binding IsNumber}" Value="False"/>
-                              </MultiDataTrigger.Conditions>
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </MultiDataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <ItemsControl x:Name="C2Grid"
+                        ItemsPanel="{StaticResource FieldItemsPanel}"
+                        ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
 
       <TabItem Header="C3">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <ItemsControl x:Name="C3Grid">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="4"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Style="{StaticResource CardBorderStyle}">
-                  <Border.Background>
-                    <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
-                      <Binding Path="Value"/>
-                      <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                    </MultiBinding>
-                  </Border.Background>
-                  <StackPanel>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
-                    <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
-                    <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ComboBox.Style>
-                      <ComboBox.ItemsSource>
-                        <x:Array Type="sys:String">
-                          <sys:String>true</sys:String>
-                          <sys:String>false</sys:String>
-                        </x:Array>
-                      </ComboBox.ItemsSource>
-                    </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Text="{Binding Value}">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <MultiDataTrigger>
-                              <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsBoolean}" Value="False"/>
-                                <Condition Binding="{Binding IsNumber}" Value="False"/>
-                              </MultiDataTrigger.Conditions>
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </MultiDataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <ItemsControl x:Name="C3Grid"
+                        ItemsPanel="{StaticResource FieldItemsPanel}"
+                        ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
 
       <TabItem Header="V1">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <ItemsControl x:Name="V1Grid">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="4"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Style="{StaticResource CardBorderStyle}">
-                  <Border.Background>
-                    <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
-                      <Binding Path="Value"/>
-                      <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                    </MultiBinding>
-                  </Border.Background>
-                  <StackPanel>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
-                    <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
-                    <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ComboBox.Style>
-                      <ComboBox.ItemsSource>
-                        <x:Array Type="sys:String">
-                          <sys:String>true</sys:String>
-                          <sys:String>false</sys:String>
-                        </x:Array>
-                      </ComboBox.ItemsSource>
-                    </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Text="{Binding Value}">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <MultiDataTrigger>
-                              <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsBoolean}" Value="False"/>
-                                <Condition Binding="{Binding IsNumber}" Value="False"/>
-                              </MultiDataTrigger.Conditions>
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </MultiDataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <ItemsControl x:Name="V1Grid"
+                        ItemsPanel="{StaticResource FieldItemsPanel}"
+                        ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
 
       <TabItem Header="V2">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <ItemsControl x:Name="V2Grid">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="4"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Style="{StaticResource CardBorderStyle}">
-                  <Border.Background>
-                    <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
-                      <Binding Path="Value"/>
-                      <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                    </MultiBinding>
-                  </Border.Background>
-                  <StackPanel>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
-                    <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
-                    <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ComboBox.Style>
-                      <ComboBox.ItemsSource>
-                        <x:Array Type="sys:String">
-                          <sys:String>true</sys:String>
-                          <sys:String>false</sys:String>
-                        </x:Array>
-                      </ComboBox.ItemsSource>
-                    </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Text="{Binding Value}">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <MultiDataTrigger>
-                              <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsBoolean}" Value="False"/>
-                                <Condition Binding="{Binding IsNumber}" Value="False"/>
-                              </MultiDataTrigger.Conditions>
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </MultiDataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <ItemsControl x:Name="V2Grid"
+                        ItemsPanel="{StaticResource FieldItemsPanel}"
+                        ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
 
       <TabItem Header="V3">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <ItemsControl x:Name="V3Grid">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="4"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Style="{StaticResource CardBorderStyle}">
-                  <Border.Background>
-                    <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
-                      <Binding Path="Value"/>
-                      <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                    </MultiBinding>
-                  </Border.Background>
-                  <StackPanel>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
-                    <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
-                    <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ComboBox.Style>
-                      <ComboBox.ItemsSource>
-                        <x:Array Type="sys:String">
-                          <sys:String>true</sys:String>
-                          <sys:String>false</sys:String>
-                        </x:Array>
-                      </ComboBox.ItemsSource>
-                    </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Text="{Binding Value}">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <MultiDataTrigger>
-                              <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsBoolean}" Value="False"/>
-                                <Condition Binding="{Binding IsNumber}" Value="False"/>
-                              </MultiDataTrigger.Conditions>
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </MultiDataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <ItemsControl x:Name="V3Grid"
+                        ItemsPanel="{StaticResource FieldItemsPanel}"
+                        ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Header="Scalars">
+      <TabItem Header="Setpoints">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <ItemsControl x:Name="ScalarGrid">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="4"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Style="{StaticResource CardBorderStyle}">
-                  <Border.Background>
-                    <MultiBinding Converter="{StaticResource ValueHighlightConverter}">
-                      <Binding Path="Value"/>
-                      <Binding Path="DataContext.HighlightActive" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                    </MultiBinding>
-                  </Border.Background>
-                  <StackPanel>
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource DescTextStyle}"/>
-                    <TextBlock Text="{Binding Name}" Style="{StaticResource TagTextStyle}"/>
-                    <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=EditToggle}">
-                      <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBoolean}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </ComboBox.Style>
-                      <ComboBox.ItemsSource>
-                        <x:Array Type="sys:String">
-                          <sys:String>true</sys:String>
-                          <sys:String>false</sys:String>
-                        </x:Array>
-                      </ComboBox.ItemsSource>
-                    </ComboBox>
-                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                             IsEnabled="{Binding IsChecked, ElementName=EditToggle}"
-                             MinWidth="140">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Text="{Binding Value}">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                          <Style.Triggers>
-                            <MultiDataTrigger>
-                              <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsBoolean}" Value="False"/>
-                                <Condition Binding="{Binding IsNumber}" Value="False"/>
-                              </MultiDataTrigger.Conditions>
-                              <Setter Property="Visibility" Value="Visible"/>
-                            </MultiDataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+          <ItemsControl x:Name="SetpointGrid"
+                        ItemsPanel="{StaticResource FieldItemsPanel}"
+                        ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
     </TabControl>
   </Grid>
 </Window>
-
-
-

@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Windows;
 using Microsoft.Win32;
 
@@ -51,7 +49,7 @@ namespace SequenceNavigator
             {
                 Title = "Select SEQ ZIP file",
                 Filter = "ZIP Files (*.zip)|*.zip|All Files (*.*)|*.*",
-                InitialDirectory = ResolveInitialDirectory(_initialDirectory)
+                InitialDirectory = UiHelpers.ResolveInitialDirectory(_initialDirectory)
             };
 
             return dialog.ShowDialog(this) == true ? dialog.FileName : null;
@@ -79,15 +77,6 @@ namespace SequenceNavigator
         {
             CompareBtn.IsEnabled = !string.IsNullOrWhiteSpace(FirstZipPath) &&
                                    !string.IsNullOrWhiteSpace(SecondZipPath);
-        }
-
-        private static string? ResolveInitialDirectory(string? candidate)
-        {
-            if (!string.IsNullOrWhiteSpace(candidate) && Directory.Exists(candidate))
-            {
-                return candidate;
-            }
-            return null;
         }
     }
 }

@@ -12,6 +12,10 @@ obj/
 # Logs
 *.log
 
+# Python
+__pycache__/
+*.pyc
+
 # OS
 Thumbs.db
 ehthumbs.db

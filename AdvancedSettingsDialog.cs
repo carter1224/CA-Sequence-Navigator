@@ -1,6 +1,6 @@
-using System;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -37,32 +37,32 @@ namespace SequenceNavigator
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(260) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            grid.Children.Add(MakeLabel("Default IP:", 0, 0));
-            _ipBox = MakeTextBox(settings.DefaultIp, 0, 1, grid);
+            UiHelpers.MakeLabel(grid, "PLC IP:", 0, 0);
+            _ipBox = UiHelpers.MakeTextBox(grid, settings.PlcIp, 0, 1);
 
-            grid.Children.Add(MakeLabel("Default Ethernet Slot:", 1, 0));
-            _ethBox = MakeTextBox(settings.DefaultEthSlot.ToString(CultureInfo.InvariantCulture), 1, 1, grid);
+            UiHelpers.MakeLabel(grid, "Ethernet Slot:", 1, 0);
+            _ethBox = UiHelpers.MakeTextBox(grid, settings.EthSlot.ToString(CultureInfo.InvariantCulture), 1, 1);
 
-            grid.Children.Add(MakeLabel("Default CPU Slot:", 2, 0));
-            _cpuBox = MakeTextBox(settings.DefaultCpuSlot.ToString(CultureInfo.InvariantCulture), 2, 1, grid);
+            UiHelpers.MakeLabel(grid, "Controller Slot:", 2, 0);
+            _cpuBox = UiHelpers.MakeTextBox(grid, settings.CpuSlot.ToString(CultureInfo.InvariantCulture), 2, 1);
 
-            grid.Children.Add(MakeLabel("Retry Count:", 3, 0));
-            _retryBox = MakeTextBox(settings.RetryCount.ToString(CultureInfo.InvariantCulture), 3, 1, grid);
+            UiHelpers.MakeLabel(grid, "Retry Count:", 3, 0);
+            _retryBox = UiHelpers.MakeTextBox(grid, settings.RetryCount.ToString(CultureInfo.InvariantCulture), 3, 1);
 
-            grid.Children.Add(MakeLabel("Retry Delay (sec):", 4, 0));
-            _delayBox = MakeTextBox(settings.RetryDelaySeconds.ToString(CultureInfo.InvariantCulture), 4, 1, grid);
+            UiHelpers.MakeLabel(grid, "Retry Delay (sec):", 4, 0);
+            _delayBox = UiHelpers.MakeTextBox(grid, settings.RetryDelaySeconds.ToString(CultureInfo.InvariantCulture), 4, 1);
 
-            grid.Children.Add(MakeLabel("PLC Timeout (sec):", 5, 0));
-            _timeoutBox = MakeTextBox(settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture), 5, 1, grid);
+            UiHelpers.MakeLabel(grid, "PLC Timeout (sec):", 5, 0);
+            _timeoutBox = UiHelpers.MakeTextBox(grid, settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture), 5, 1);
 
-            _includeProgramTags = MakeCheckBox("Include program tags", settings.IncludeProgramTags, 6, 1, grid);
-            _showDescriptions = MakeCheckBox("Show descriptions", settings.ShowDescriptions, 7, 1, grid);
-            _highlightActive = MakeCheckBox("Highlight active values", settings.HighlightActive, 8, 1, grid);
-            _enableDebug = MakeCheckBox("Enable debug log", settings.EnableDebugLog, 9, 1, grid);
+            _includeProgramTags = UiHelpers.MakeCheckBox(grid, "Include program tags", settings.IncludeProgramTags, 6, 1);
+            _showDescriptions = UiHelpers.MakeCheckBox(grid, "Show descriptions", settings.ShowDescriptions, 7, 1);
+            _highlightActive = UiHelpers.MakeCheckBox(grid, "Highlight active values", settings.HighlightActive, 8, 1);
+            _enableDebug = UiHelpers.MakeCheckBox(grid, "Enable debug log", settings.EnableDebugLog, 9, 1);
 
-            grid.Children.Add(MakeLabel("Log Path:", 10, 0));
-            _logPathBox = MakeTextBox(settings.LogPath, 10, 1, grid);
-            var browseBtn = new Button { Content = "Browse", MinWidth = 90, Margin = new Thickness(8, 0, 0, 0) };
+            UiHelpers.MakeLabel(grid, "Log Path:", 10, 0);
+            _logPathBox = UiHelpers.MakeTextBox(grid, settings.LogPath, 10, 1);
+            var browseBtn = new Button { Content = "Browse", Margin = new Thickness(8, 0, 0, 0) };
             browseBtn.Click += BrowseBtn_Click;
             Grid.SetRow(browseBtn, 10);
             Grid.SetColumn(browseBtn, 2);
@@ -76,13 +76,12 @@ namespace SequenceNavigator
             };
             var buildText = new TextBlock
             {
-                Text = "Build 1.2.0 by Carter Smith",
+                Text = BuildLabel(),
                 VerticalAlignment = VerticalAlignment.Center
             };
-            var spacer = new FrameworkElement { Width = 20 };
-            var okBtn = new Button { Content = "OK", MinWidth = 90, Margin = new Thickness(8, 0, 0, 0) };
+            var okBtn = new Button { Content = "OK", Margin = new Thickness(8, 0, 0, 0) };
             okBtn.Click += OkBtn_Click;
-            var cancelBtn = new Button { Content = "Cancel", MinWidth = 90, Margin = new Thickness(8, 0, 0, 0) };
+            var cancelBtn = new Button { Content = "Cancel", Margin = new Thickness(8, 0, 0, 0) };
             cancelBtn.Click += (_, _) => DialogResult = false;
 
             footer.Children.Add(buildText);
@@ -98,9 +97,9 @@ namespace SequenceNavigator
 
             Settings = new AppSettings
             {
-                DefaultIp = settings.DefaultIp,
-                DefaultEthSlot = settings.DefaultEthSlot,
-                DefaultCpuSlot = settings.DefaultCpuSlot,
+                PlcIp = settings.PlcIp,
+                EthSlot = settings.EthSlot,
+                CpuSlot = settings.CpuSlot,
                 RetryCount = settings.RetryCount,
                 RetryDelaySeconds = settings.RetryDelaySeconds,
                 TimeoutSeconds = settings.TimeoutSeconds,
@@ -113,6 +112,32 @@ namespace SequenceNavigator
         }
 
         public AppSettings Settings { get; }
+
+        /// <summary>
+        /// Reads the version from assembly metadata so &lt;Version&gt; in the csproj is the
+        /// only place it has to be bumped.
+        /// </summary>
+        private static string BuildLabel()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var informational = assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+            // Strip any "+<commit>" suffix in case the SDK appends one.
+            var version = informational?.Split('+')[0];
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                version = assembly.GetName().Version?.ToString(3);
+            }
+
+            var author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company;
+            if (string.IsNullOrWhiteSpace(author))
+            {
+                author = "Carter Smith";
+            }
+
+            return $"Build {version ?? "?"} by {author}";
+        }
 
         private void BrowseBtn_Click(object? sender, RoutedEventArgs e)
         {
@@ -130,9 +155,9 @@ namespace SequenceNavigator
 
         private void OkBtn_Click(object? sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(_ipBox.Text))
+            if (!PlcAddress.IsValid(_ipBox.Text))
             {
-                MessageBox.Show("Default IP is required.", "Invalid Input",
+                MessageBox.Show("PLC IP must be a valid IPv4 address or hostname.", "Invalid Input",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -172,9 +197,9 @@ namespace SequenceNavigator
                 return;
             }
 
-            Settings.DefaultIp = _ipBox.Text.Trim();
-            Settings.DefaultEthSlot = ethSlot;
-            Settings.DefaultCpuSlot = cpuSlot;
+            Settings.PlcIp = _ipBox.Text.Trim();
+            Settings.EthSlot = ethSlot;
+            Settings.CpuSlot = cpuSlot;
             Settings.RetryCount = retries;
             Settings.RetryDelaySeconds = delay;
             Settings.TimeoutSeconds = timeout;
@@ -187,31 +212,6 @@ namespace SequenceNavigator
             DialogResult = true;
         }
 
-        private static Label MakeLabel(string text, int row, int col)
-        {
-            var label = new Label { Content = text, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetRow(label, row);
-            Grid.SetColumn(label, col);
-            return label;
-        }
-
-        private static TextBox MakeTextBox(string text, int row, int col, Grid grid)
-        {
-            var box = new TextBox { Text = text };
-            Grid.SetRow(box, row);
-            Grid.SetColumn(box, col);
-            grid.Children.Add(box);
-            return box;
-        }
-
-        private static CheckBox MakeCheckBox(string text, bool isChecked, int row, int col, Grid grid)
-        {
-            var box = new CheckBox { Content = text, IsChecked = isChecked };
-            Grid.SetRow(box, row);
-            Grid.SetColumn(box, col);
-            grid.Children.Add(box);
-            return box;
-        }
     }
 }
 
