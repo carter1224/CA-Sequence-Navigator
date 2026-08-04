@@ -1,31 +1,39 @@
 <Window x:Class="SequenceNavigator.CompareSequencesDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Compare Sequences" Height="220" Width="560" ResizeMode="NoResize"
+        Title="Compare Sequences" Height="255" Width="700" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner">
-  <Grid Margin="12">
+  <Grid Margin="14">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto"/>
       <ColumnDefinition Width="*"/>
       <ColumnDefinition Width="Auto"/>
     </Grid.ColumnDefinitions>
 
-    <TextBox x:Name="FirstZipBox" Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" IsReadOnly="True"/>
-    <Button Grid.Row="0" Grid.Column="1" Content="Browse..." Margin="0,0,0,8"
+    <!-- Order matters and the boxes used to be unlabelled, so say so up front. -->
+    <TextBlock Grid.Row="0" Grid.ColumnSpan="3" TextWrapping="Wrap" Margin="0,0,0,14"
+               Foreground="{StaticResource SubtleTextBrush}"
+               Text="Choose two backup ZIPs. Differences are reported as A to B, so pick the order that reads the way you want."/>
+
+    <Label Grid.Row="1" Grid.Column="0" Content="Backup A:" VerticalAlignment="Center"/>
+    <TextBox x:Name="FirstZipBox" Grid.Row="1" Grid.Column="1" Margin="8,0,8,10" IsReadOnly="True"/>
+    <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Margin="0,0,0,10"
             Click="BrowseFirst_Click"/>
 
-    <TextBox x:Name="SecondZipBox" Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" IsReadOnly="True"/>
-    <Button Grid.Row="1" Grid.Column="1" Content="Browse..." Margin="0,0,0,8"
+    <Label Grid.Row="2" Grid.Column="0" Content="Backup B:" VerticalAlignment="Center"/>
+    <TextBox x:Name="SecondZipBox" Grid.Row="2" Grid.Column="1" Margin="8,0,8,10" IsReadOnly="True"/>
+    <Button Grid.Row="2" Grid.Column="2" Content="Browse..." Margin="0,0,0,10"
             Click="BrowseSecond_Click"/>
 
-    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"
-                HorizontalAlignment="Right">
-      <Button x:Name="CompareBtn" Content="Compare" Margin="0,0,8,0"
-              Click="Compare_Click"/>
+    <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom">
+      <Button x:Name="CompareBtn" Content="Compare" Margin="0,0,8,0" Click="Compare_Click"/>
       <Button Content="Cancel" Click="Cancel_Click"/>
     </StackPanel>
   </Grid>

@@ -60,7 +60,7 @@ namespace SequenceNavigator
         }
 
         /// <summary>
-        /// Settings written before 2.0 stored the connection under "Default*" names.
+        /// Settings written before 1.3 stored the connection under "Default*" names.
         /// Carry those over so an existing install keeps the address it was using
         /// instead of silently snapping back to the built-in default.
         /// </summary>

@@ -7,12 +7,19 @@ namespace SequenceNavigator
     public sealed class PlcConnectionDialog : Window
     {
         private readonly TextBox _ipBox;
-        private readonly TextBox _ethBox;
         private readonly TextBox _cpuBox;
+
+        // The backplane port is carried through unchanged rather than shown. It is not a
+        // slot and it is not about Ethernet: in a CIP route, port 1 IS the backplane on
+        // every Logix chassis, which is why it is always 1. RSLinx spells the same hop as
+        // "\Backplane\". Exposing it only gave users a second number to get wrong.
+        private readonly int _ethSlot;
 
         // Values always come from AppSettings, which owns the install-time defaults.
         public PlcConnectionDialog(string ip, int ethSlot, int cpuSlot)
         {
+            _ethSlot = ethSlot;
+
             Title = "PLC Connection";
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ResizeMode = ResizeMode.NoResize;
@@ -25,18 +32,14 @@ namespace SequenceNavigator
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(210) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220) });
 
             UiHelpers.MakeLabel(grid, "PLC IP:", 0, 0);
             _ipBox = UiHelpers.MakeTextBox(grid, ip, 0, 1);
 
-            UiHelpers.MakeLabel(grid, "Ethernet Slot:", 1, 0);
-            _ethBox = UiHelpers.MakeTextBox(grid, ethSlot.ToString(CultureInfo.InvariantCulture), 1, 1);
-
-            UiHelpers.MakeLabel(grid, "Controller Slot:", 2, 0);
-            _cpuBox = UiHelpers.MakeTextBox(grid, cpuSlot.ToString(CultureInfo.InvariantCulture), 2, 1);
+            UiHelpers.MakeLabel(grid, "Controller Slot:", 1, 0);
+            _cpuBox = UiHelpers.MakeTextBox(grid, cpuSlot.ToString(CultureInfo.InvariantCulture), 1, 1);
 
             var buttonPanel = new StackPanel
             {
@@ -51,7 +54,7 @@ namespace SequenceNavigator
             buttonPanel.Children.Add(okBtn);
             buttonPanel.Children.Add(cancelBtn);
 
-            Grid.SetRow(buttonPanel, 3);
+            Grid.SetRow(buttonPanel, 2);
             Grid.SetColumnSpan(buttonPanel, 2);
             grid.Children.Add(buttonPanel);
 
@@ -73,22 +76,16 @@ namespace SequenceNavigator
                 return;
             }
 
-            if (!int.TryParse(_ethBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int ethSlot))
+            if (!int.TryParse(_cpuBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int cpuSlot) ||
+                cpuSlot < 0)
             {
-                MessageBox.Show("Ethernet slot must be a whole number.", "Invalid Slot",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!int.TryParse(_cpuBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int cpuSlot))
-            {
-                MessageBox.Show("Controller slot must be a whole number.", "Invalid Slot",
+                MessageBox.Show("Controller slot must be 0 or greater.", "Invalid Slot",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             IpAddress = ip;
-            EthSlot = ethSlot;
+            EthSlot = _ethSlot;
             CpuSlot = cpuSlot;
             DialogResult = true;
         }

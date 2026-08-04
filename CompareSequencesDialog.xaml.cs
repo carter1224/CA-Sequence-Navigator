@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using Microsoft.Win32;
 
@@ -7,10 +8,19 @@ namespace SequenceNavigator
     {
         private readonly string? _initialDirectory;
 
-        public CompareSequencesDialog(string? initialDirectory)
+        public CompareSequencesDialog(string? initialDirectory, string? currentZipPath)
         {
             InitializeComponent();
             _initialDirectory = initialDirectory;
+
+            // Seed A with whatever is already open. The usual comparison is "what I am
+            // looking at" against another backup, so this removes one of the two browses.
+            if (!string.IsNullOrWhiteSpace(currentZipPath) && File.Exists(currentZipPath))
+            {
+                FirstZipPath = currentZipPath;
+                FirstZipBox.Text = currentZipPath;
+            }
+
             UpdateCompareEnabled();
         }
 

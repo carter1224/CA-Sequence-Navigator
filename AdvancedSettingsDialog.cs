@@ -10,7 +10,6 @@ namespace SequenceNavigator
     public sealed class AdvancedSettingsDialog : Window
     {
         private readonly TextBox _ipBox;
-        private readonly TextBox _ethBox;
         private readonly TextBox _cpuBox;
         private readonly TextBox _retryBox;
         private readonly TextBox _delayBox;
@@ -29,42 +28,39 @@ namespace SequenceNavigator
             SizeToContent = SizeToContent.WidthAndHeight;
 
             var grid = new Grid { Margin = new Thickness(14) };
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 11; i++)
             {
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             }
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(210) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(260) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             UiHelpers.MakeLabel(grid, "PLC IP:", 0, 0);
             _ipBox = UiHelpers.MakeTextBox(grid, settings.PlcIp, 0, 1);
 
-            UiHelpers.MakeLabel(grid, "Ethernet Slot:", 1, 0);
-            _ethBox = UiHelpers.MakeTextBox(grid, settings.EthSlot.ToString(CultureInfo.InvariantCulture), 1, 1);
+            UiHelpers.MakeLabel(grid, "Controller Slot:", 1, 0);
+            _cpuBox = UiHelpers.MakeTextBox(grid, settings.CpuSlot.ToString(CultureInfo.InvariantCulture), 1, 1);
 
-            UiHelpers.MakeLabel(grid, "Controller Slot:", 2, 0);
-            _cpuBox = UiHelpers.MakeTextBox(grid, settings.CpuSlot.ToString(CultureInfo.InvariantCulture), 2, 1);
+            UiHelpers.MakeLabel(grid, "Retry Count:", 2, 0);
+            _retryBox = UiHelpers.MakeTextBox(grid, settings.RetryCount.ToString(CultureInfo.InvariantCulture), 2, 1);
 
-            UiHelpers.MakeLabel(grid, "Retry Count:", 3, 0);
-            _retryBox = UiHelpers.MakeTextBox(grid, settings.RetryCount.ToString(CultureInfo.InvariantCulture), 3, 1);
+            UiHelpers.MakeLabel(grid, "Retry Delay (sec):", 3, 0);
+            _delayBox = UiHelpers.MakeTextBox(grid, settings.RetryDelaySeconds.ToString(CultureInfo.InvariantCulture), 3, 1);
 
-            UiHelpers.MakeLabel(grid, "Retry Delay (sec):", 4, 0);
-            _delayBox = UiHelpers.MakeTextBox(grid, settings.RetryDelaySeconds.ToString(CultureInfo.InvariantCulture), 4, 1);
+            UiHelpers.MakeLabel(grid, "PLC Timeout (sec):", 4, 0);
+            _timeoutBox = UiHelpers.MakeTextBox(grid, settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture), 4, 1);
 
-            UiHelpers.MakeLabel(grid, "PLC Timeout (sec):", 5, 0);
-            _timeoutBox = UiHelpers.MakeTextBox(grid, settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture), 5, 1);
+            _includeProgramTags = UiHelpers.MakeCheckBox(grid, "Include program tags", settings.IncludeProgramTags, 5, 1);
+            _showDescriptions = UiHelpers.MakeCheckBox(grid, "Show descriptions", settings.ShowDescriptions, 6, 1);
+            _highlightActive = UiHelpers.MakeCheckBox(grid, "Highlight active values", settings.HighlightActive, 7, 1);
+            _enableDebug = UiHelpers.MakeCheckBox(grid, "Enable debug log", settings.EnableDebugLog, 8, 1);
 
-            _includeProgramTags = UiHelpers.MakeCheckBox(grid, "Include program tags", settings.IncludeProgramTags, 6, 1);
-            _showDescriptions = UiHelpers.MakeCheckBox(grid, "Show descriptions", settings.ShowDescriptions, 7, 1);
-            _highlightActive = UiHelpers.MakeCheckBox(grid, "Highlight active values", settings.HighlightActive, 8, 1);
-            _enableDebug = UiHelpers.MakeCheckBox(grid, "Enable debug log", settings.EnableDebugLog, 9, 1);
-
-            UiHelpers.MakeLabel(grid, "Log Path:", 10, 0);
-            _logPathBox = UiHelpers.MakeTextBox(grid, settings.LogPath, 10, 1);
+            UiHelpers.MakeLabel(grid, "Log Path:", 9, 0);
+            _logPathBox = UiHelpers.MakeTextBox(grid, settings.LogPath, 9, 1);
             var browseBtn = new Button { Content = "Browse", Margin = new Thickness(8, 0, 0, 0) };
             browseBtn.Click += BrowseBtn_Click;
-            Grid.SetRow(browseBtn, 10);
+            Grid.SetRow(browseBtn, 9);
             Grid.SetColumn(browseBtn, 2);
             grid.Children.Add(browseBtn);
 
@@ -89,7 +85,7 @@ namespace SequenceNavigator
             footer.Children.Add(okBtn);
             footer.Children.Add(cancelBtn);
 
-            Grid.SetRow(footer, 11);
+            Grid.SetRow(footer, 10);
             Grid.SetColumnSpan(footer, 3);
             grid.Children.Add(footer);
 
@@ -162,16 +158,10 @@ namespace SequenceNavigator
                 return;
             }
 
-            if (!int.TryParse(_ethBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int ethSlot))
+            if (!int.TryParse(_cpuBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int cpuSlot) ||
+                cpuSlot < 0)
             {
-                MessageBox.Show("Ethernet slot must be a whole number.", "Invalid Input",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!int.TryParse(_cpuBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int cpuSlot))
-            {
-                MessageBox.Show("CPU slot must be a whole number.", "Invalid Input",
+                MessageBox.Show("Controller slot must be 0 or greater.", "Invalid Input",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -198,7 +188,7 @@ namespace SequenceNavigator
             }
 
             Settings.PlcIp = _ipBox.Text.Trim();
-            Settings.EthSlot = ethSlot;
+            // EthSlot is not shown, so it keeps whatever the copied settings already had.
             Settings.CpuSlot = cpuSlot;
             Settings.RetryCount = retries;
             Settings.RetryDelaySeconds = delay;

@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
-        Title="Sequence Navigator" Height="820" Width="1180" Icon="CA.ico">
+        Title="Sequence Navigator" Height="820" Width="1180" Icon="CA.ico"
+        MinWidth="1040" MinHeight="600">
   <Window.Resources>
     <Style x:Key="DescTextStyle" TargetType="TextBlock">
       <Setter Property="FontSize" Value="12"/>
@@ -20,8 +21,12 @@
         </MultiDataTrigger>
       </Style.Triggers>
     </Style>
+    <!-- Card text uses exactly two sizes: 12 for the description and the value, 11 for
+         the tag name. Every one is set explicitly, because anything left unset inherits
+         13 from the Window style and produced a third size inside the same card. -->
     <Style x:Key="TagTextStyle" TargetType="TextBlock">
       <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="Normal"/>
       <Setter Property="Foreground" Value="#666"/>
     </Style>
 
@@ -45,7 +50,7 @@
 
           <!-- Boolean fields: dropdown. The array stays inline so each card gets its
                own instance rather than every ComboBox sharing one collection view. -->
-          <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}"
+          <ComboBox SelectedItem="{Binding Value, Mode=TwoWay}" FontSize="12"
                     IsEnabled="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Window}}">
             <ComboBox.Style>
               <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
@@ -66,7 +71,7 @@
           </ComboBox>
 
           <!-- Numeric fields: editable text box. -->
-          <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+          <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" FontSize="12"
                    IsEnabled="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Window}}"
                    MinWidth="140"
                    HorizontalAlignment="Stretch">
@@ -86,6 +91,8 @@
           <TextBlock Text="{Binding Value}">
             <TextBlock.Style>
               <Style TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontWeight" Value="Normal"/>
                 <Setter Property="Visibility" Value="Collapsed"/>
                 <Style.Triggers>
                   <MultiDataTrigger>
@@ -107,57 +114,78 @@
   <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
-      <RowDefinition Height="Auto"/>
-      <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
+    <!-- One header panel rather than two stacked boxes plus a floating text line:
+         file actions on top, sequence navigation and edit/transfer below a thin
+         divider, with the tag metadata inside the same border. -->
     <Border Grid.Row="0" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderBrush}"
-            BorderThickness="1" Padding="12" CornerRadius="6">
+            BorderThickness="1" Padding="12" CornerRadius="6" Margin="0,0,0,10">
       <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        <TextBox x:Name="PathBox" IsReadOnly="True" Margin="0,0,8,0"/>
-        <Button x:Name="ImportBtn" Grid.Column="1" Content="Upload from PLC" Margin="0,0,8,0" Click="ImportFromPlc_Click"/>
-        <Button x:Name="OpenZipBtn" Grid.Column="2" Content="Open ZIP" Click="OpenZip_Click"/>
-        <Button x:Name="AdvancedBtn" Grid.Column="3" Content="Advanced Settings" Margin="8,0,0,0" Click="AdvancedSettings_Click"/>
-      </Grid>
-    </Border>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-    <Border Grid.Row="1" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderBrush}"
-            BorderThickness="1" Padding="12" CornerRadius="6" Margin="0,10,0,6">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <ComboBox x:Name="JsonPicker" Width="220" Margin="0,0,8,0" SelectionChanged="JsonPicker_SelectionChanged"/>
-        <Button x:Name="PrevBtn" Grid.Column="1" Content="&lt; Prev" Click="Prev_Click"/>
-        <Button x:Name="NextBtn" Grid.Column="2" Content="Next >" Margin="8,0,0,0" Click="Next_Click"/>
-        <TextBlock x:Name="IndexLabel" Grid.Column="3" FontWeight="Bold" Margin="12,0,0,0" VerticalAlignment="Center"/>
-        <TextBox x:Name="IndexBox" Grid.Column="4" Width="60" Margin="12,0,0,0" VerticalAlignment="Center" KeyDown="IndexBox_KeyDown"/>
-        <Button x:Name="GoBtn" Grid.Column="5" Content="Go" Margin="8,0,0,0" Click="Go_Click"/>
-        <ToggleButton x:Name="EditToggle" Grid.Column="6" Content="Edit Mode" Margin="12,0,0,0"
-                      Checked="EditToggle_Checked" Unchecked="EditToggle_Unchecked"/>
-        <Button x:Name="ExportBtn" Grid.Column="7" Content="Save Changes" Margin="8,0,0,0" Click="ExportZip_Click"/>
-        <Button x:Name="ExportPlcBtn" Grid.Column="8" Content="Download to PLC" Margin="8,0,0,0" Click="ExportToPlc_Click"/>
-        <Button x:Name="CompareBtn" Grid.Column="9" Content="Compare Sequences" Margin="8,0,0,0" Click="CompareSequences_Click"/>
-        <TextBlock Grid.Column="10" Text="EDIT MODE" Foreground="#B00000" FontWeight="Bold" FontSize="16"
-                   Margin="12,0,0,0" VerticalAlignment="Center">
+        <!-- File: open/upload on the left, the loaded file in the middle, tools right. -->
+        <Grid Grid.Row="0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <Button x:Name="OpenZipBtn" Grid.Column="0" Content="Open ZIP" Click="OpenZip_Click"/>
+          <Button x:Name="ImportBtn" Grid.Column="1" Content="Upload from PLC" Margin="8,0,0,0" Click="ImportFromPlc_Click"/>
+          <!-- Filename only; the full path is the tooltip. A full-width read-only text
+               box used to dominate this row for no benefit. -->
+          <TextBlock x:Name="PathBox" Grid.Column="2" Margin="16,0,16,0" VerticalAlignment="Center"
+                     FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+          <Button x:Name="CompareBtn" Grid.Column="3" Content="Compare Sequences" Click="CompareSequences_Click"/>
+          <Button x:Name="AdvancedBtn" Grid.Column="4" Content="Advanced Settings" Margin="8,0,0,0" Click="AdvancedSettings_Click"/>
+        </Grid>
+
+        <Border Grid.Row="1" Height="1" Background="{StaticResource BorderBrush}" Margin="0,12,0,12"/>
+
+        <!-- Navigation only. Edit Mode / Save Changes / Download to PLC live on the tab
+             strip band below, beside the group tabs. -->
+        <Grid Grid.Row="2">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+          <ComboBox x:Name="JsonPicker" Grid.Column="0" Width="220" SelectionChanged="JsonPicker_SelectionChanged"/>
+          <!-- The step readout leads the navigation group, then a gap before the controls
+               that change it. MinWidth keeps "Step 9" and "Step 99" the same width so the
+               buttons beside it never shift. -->
+          <TextBlock x:Name="IndexLabel" Grid.Column="1" FontWeight="Bold" FontSize="15"
+                     Margin="24,0,0,0" VerticalAlignment="Center" MinWidth="70" TextAlignment="Center"/>
+          <Button x:Name="PrevBtn" Grid.Column="2" Content="&lt; Prev" Margin="16,0,0,0" Click="Prev_Click"/>
+          <!-- Type a step and press Enter. MaxLength 2 plus digits-only input means an
+               out-of-range entry is very nearly impossible to type in the first place.
+
+               Locked to a 30x30 square: Width/Height fix the size, and the local Min/Max
+               pair stops the shared TextBox style's MinHeight (or any later change to it)
+               from stretching it back out. 30 matches the button height beside it. Padding
+               is zeroed because the style's 8,4 would leave too little room for two digits
+               at this size, with content centred both ways instead. -->
+          <TextBox x:Name="IndexBox" Grid.Column="3" VerticalAlignment="Center" Margin="8,0,0,0"
+                   Width="30" Height="30"
+                   MinWidth="30" MinHeight="30" MaxWidth="30" MaxHeight="30"
+                   Padding="0" TextAlignment="Center" VerticalContentAlignment="Center"
+                   MaxLength="2" ToolTip="Type a step number and press Enter"
+                   KeyDown="IndexBox_KeyDown" PreviewTextInput="IndexBox_PreviewTextInput"/>
+          <Button x:Name="NextBtn" Grid.Column="4" Content="Next >" Margin="8,0,0,0" Click="Next_Click"/>
+
+          <TextBlock Grid.Column="5" Text="EDIT MODE" Foreground="#B00000" FontWeight="Bold" FontSize="16"
+                     Margin="24,0,24,0" VerticalAlignment="Center" HorizontalAlignment="Left">
           <TextBlock.Style>
             <Style TargetType="TextBlock">
               <Setter Property="Visibility" Value="Collapsed"/>
@@ -178,16 +206,17 @@
               </Style.Triggers>
             </Style>
           </TextBlock.Style>
-        </TextBlock>
+          </TextBlock>
+        </Grid>
+
       </Grid>
     </Border>
 
-    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,2,0,10">
-      <TextBlock x:Name="TagLabel" Margin="0,0,16,0"/>
-      <TextBlock x:Name="DefLabel"/>
-    </StackPanel>
-
-    <TabControl Grid.Row="3" x:Name="SeqTabs">
+    <!-- The buttons overlay the empty right-hand end of the tab strip. They stay outside
+         the TabControl template on purpose: inside it they would land in the template's
+         namescope and the code-behind could no longer reach them as fields. -->
+    <Grid Grid.Row="1">
+      <TabControl x:Name="SeqTabs">
       <TabItem Header="C1">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <ItemsControl x:Name="C1Grid"
@@ -243,6 +272,18 @@
                         ItemTemplate="{StaticResource FieldItemTemplate}"/>
         </ScrollViewer>
       </TabItem>
-    </TabControl>
+      </TabControl>
+
+      <!-- Height matches the TabItem height so these sit centred in the tab band. -->
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
+                  Height="38" Margin="0,0,8,0">
+        <ToggleButton x:Name="EditToggle" Content="Edit Mode" VerticalAlignment="Center"
+                      Checked="EditToggle_Checked" Unchecked="EditToggle_Unchecked"/>
+        <Button x:Name="ExportBtn" Content="Save Changes" Margin="8,0,0,0" VerticalAlignment="Center"
+                Click="ExportZip_Click"/>
+        <Button x:Name="ExportPlcBtn" Content="Download to PLC" Margin="8,0,0,0" VerticalAlignment="Center"
+                Click="ExportToPlc_Click"/>
+      </StackPanel>
+    </Grid>
   </Grid>
 </Window>

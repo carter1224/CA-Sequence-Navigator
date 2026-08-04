@@ -28,6 +28,16 @@ namespace SequenceNavigator
         // long — it simply is not reachable from the UI.
         private const int FirstStep = 1;
         private const int LastStep = SeqLength - 1;
+
+        // Utility tags rather than real sequences, so they are not offered in the picker.
+        // They stay in the cache and in the ZIP, so saving and downloading still round-trip
+        // them untouched — this hides them, it does not drop them.
+        private static readonly HashSet<string> HiddenTags = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "EMPTYSEQ",
+            "COPYSEQDATA",
+            "PROGRAM_SEQ_DATA",
+        };
         private static readonly TimeSpan MinProcessTimeout = TimeSpan.FromMinutes(3);
         private int _currentIndex;
         private readonly ObservableCollection<FieldItem> _c1Items = new();
@@ -200,7 +210,6 @@ namespace SequenceNavigator
             PrevBtn.IsEnabled = idle && hasSeq && _currentIndex > FirstStep;
             NextBtn.IsEnabled = idle && hasSeq && _currentIndex < LastStep;
             IndexBox.IsEnabled = idle && hasSeq;
-            GoBtn.IsEnabled = idle && hasSeq;
 
             IndexLabel.Text = hasSeq ? $"Step {_currentIndex}" : $"Step {FirstStep}";
             if (!IndexBox.IsFocused)
@@ -355,14 +364,25 @@ namespace SequenceNavigator
                     using var stream = entry.Open();
                     using var reader = new StreamReader(stream);
                     var jsonText = reader.ReadToEnd();
+                    // Cached regardless, so a save rewrites it byte-for-byte even when
+                    // the tag is not selectable.
                     _zipJsonCache[entry.FullName] = jsonText;
                     _zipJsonOriginal[entry.FullName] = jsonText;
+
                     var display = Path.GetFileNameWithoutExtension(entry.FullName);
+                    if (HiddenTags.Contains(display))
+                    {
+                        continue;
+                    }
+
                     var item = new ComboBoxItem { Content = display, Tag = entry.FullName };
                     JsonPicker.Items.Add(item);
                 }
 
-                PathBox.Text = path;
+                // Show the file name; the directory is long and rarely what the user
+                // needs on screen, so it lives in the tooltip.
+                PathBox.Text = Path.GetFileName(path);
+                PathBox.ToolTip = path;
                 if (JsonPicker.Items.Count > 0)
                 {
                     JsonPicker.SelectedIndex = 0;
@@ -429,10 +449,6 @@ namespace SequenceNavigator
 
                 _currentJsonName = name;
                 _currentJsonRoot = root;
-
-                TagLabel.Text = "Tag: " + ReadStringProperty(root, "source_tag_name");
-                DefLabel.Text = "Definition: " + ReadStringProperty(root, "required_definition");
-
                 _currentIndex = FirstStep;
                 RenderCurrent();
                 RefreshControlStates();
@@ -443,13 +459,6 @@ namespace SequenceNavigator
                 MessageBox.Show("Failed to load JSON:\n" + ex.Message, "Load Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private static string ReadStringProperty(JsonNode root, string propertyName)
-        {
-            return root[propertyName] is JsonValue value && value.TryGetValue<string>(out var text)
-                ? text
-                : string.Empty;
         }
 
         private void ClearFieldItems()
@@ -469,8 +478,6 @@ namespace SequenceNavigator
             _currentJsonRoot = null;
             _currentIndex = FirstStep;
             ClearFieldItems();
-            TagLabel.Text = string.Empty;
-            DefLabel.Text = string.Empty;
             RefreshControlStates();
         }
 
@@ -539,7 +546,12 @@ namespace SequenceNavigator
             }
         }
 
-        private void Go_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Commits whatever is typed in the step box. Reached only by pressing Enter —
+        /// navigating on each keystroke would hop through the intermediate values (typing
+        /// "25" would land on step 2 first) and re-render every field on the way.
+        /// </summary>
+        private void GoToTypedStep()
         {
             if (!HasSeqData)
             {
@@ -575,8 +587,22 @@ namespace SequenceNavigator
         {
             if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Return)
             {
-                Go_Click(sender, e);
+                GoToTypedStep();
                 e.Handled = true;
+            }
+        }
+
+        // Rejects anything that is not a digit before it reaches the box. Paste is not
+        // covered, but MaxLength plus the parse check on Enter still catch that.
+        private void IndexBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            foreach (var ch in e.Text)
+            {
+                if (!char.IsAsciiDigit(ch))
+                {
+                    e.Handled = true;
+                    return;
+                }
             }
         }
 
@@ -1185,7 +1211,7 @@ namespace SequenceNavigator
 
         private void CompareSequences_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new CompareSequencesDialog(_settings.LastZipDir)
+            var dialog = new CompareSequencesDialog(_settings.LastZipDir, _zipPath)
             {
                 Owner = this
             };
@@ -1218,12 +1244,70 @@ namespace SequenceNavigator
             }
         }
 
-        private static string BuildComparisonReport(string firstZip, string secondZip)
+        // Not static: the readable diff labels come from the L5X descriptions this window
+        // already loaded, so the report can speak the same language as the card grid.
+        private string BuildComparisonReport(string firstZip, string secondZip)
         {
             var firstMap = LoadZipJson(firstZip);
             var secondMap = LoadZipJson(secondZip);
             var allNames = new SortedSet<string>(firstMap.Keys, StringComparer.OrdinalIgnoreCase);
             allNames.UnionWith(secondMap.Keys);
+
+            // The per-tag sections are built first so the header can lead with a count.
+            var body = new StringBuilder();
+            var flagged = new List<string>();
+            var skipped = new List<string>();
+
+            foreach (var name in allNames)
+            {
+                var tag = Path.GetFileNameWithoutExtension(name);
+
+                // Utility tags are hidden in the picker, so comparing them here would be
+                // noise. Recorded by name below rather than dropped silently: a report
+                // that says "no differences" must not be hiding one.
+                if (HiddenTags.Contains(tag))
+                {
+                    skipped.Add(tag);
+                    continue;
+                }
+
+                bool hasA = firstMap.TryGetValue(name, out var jsonA);
+                bool hasB = secondMap.TryGetValue(name, out var jsonB);
+
+                if (!hasA || !hasB)
+                {
+                    flagged.Add(tag);
+                    body.AppendLine("============================================================");
+                    body.AppendLine(CultureInfo.InvariantCulture, $"Sequence: {tag}");
+                    body.AppendLine(hasA ? "Missing in Zip B." : "Missing in Zip A.");
+                    body.AppendLine();
+                    continue;
+                }
+
+                JsonNode? nodeA = jsonA == null ? null : JsonNode.Parse(jsonA);
+                JsonNode? nodeB = jsonB == null ? null : JsonNode.Parse(jsonB);
+                var diffs = new List<(string Path, string Detail)>();
+                CompareJsonNodes(nodeA, nodeB, "$", diffs);
+
+                if (diffs.Count == 0)
+                {
+                    continue;
+                }
+
+                flagged.Add(tag);
+                body.AppendLine("============================================================");
+                body.AppendLine(CultureInfo.InvariantCulture, $"Sequence: {tag}");
+                body.AppendLine(CultureInfo.InvariantCulture, $"{diffs.Count} difference(s):");
+                foreach (var (path, detail) in diffs)
+                {
+                    var note = IsUnreachableStep(path)
+                        ? "   [step 0 - not viewable in the UI; inspect the JSON directly]"
+                        : string.Empty;
+                    body.AppendLine(CultureInfo.InvariantCulture,
+                        $"  - {DescribeDiffPath(path)} : {detail}{note}");
+                }
+                body.AppendLine();
+            }
 
             // Formatted with InvariantCulture throughout: reports get compared between
             // machines, so dates and sizes must not shift with the local locale.
@@ -1232,73 +1316,74 @@ namespace SequenceNavigator
             sb.AppendLine(CultureInfo.InvariantCulture, $"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             AppendZipInfo(sb, "Zip A", firstZip);
             AppendZipInfo(sb, "Zip B", secondZip);
-            sb.AppendLine("============================================================");
             sb.AppendLine();
 
-            foreach (var name in allNames)
+            int compared = allNames.Count - skipped.Count;
+            sb.AppendLine(flagged.Count == 0
+                ? $"No differences found across {compared} sequence(s)."
+                : $"{flagged.Count} of {compared} sequence(s) differ: {string.Join(", ", flagged)}");
+            if (skipped.Count > 0)
             {
-                bool hasA = firstMap.TryGetValue(name, out var jsonA);
-                bool hasB = secondMap.TryGetValue(name, out var jsonB);
-
-                if (!hasA)
-                {
-                    sb.AppendLine("============================================================");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"JSON: {Path.GetFileName(name)}");
-                    sb.AppendLine("Missing in Zip A.");
-                    sb.AppendLine();
-                    continue;
-                }
-
-                if (!hasB)
-                {
-                    sb.AppendLine("============================================================");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"JSON: {Path.GetFileName(name)}");
-                    sb.AppendLine("Missing in Zip B.");
-                    sb.AppendLine();
-                    continue;
-                }
-
-                JsonNode? nodeA = jsonA == null ? null : JsonNode.Parse(jsonA);
-                JsonNode? nodeB = jsonB == null ? null : JsonNode.Parse(jsonB);
-                var diffs = new List<string>();
-                CompareJsonNodes(nodeA, nodeB, "$", diffs);
-
-                if (diffs.Count > 0)
-                {
-                    sb.AppendLine("============================================================");
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"JSON: {Path.GetFileName(name)}");
-                    sb.AppendLine("Differences:");
-                    foreach (var diff in diffs)
-                    {
-                        sb.AppendLine("  - " + AnnotateUnreachableStep(diff));
-                    }
-                    sb.AppendLine();
-                }
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"Not compared ({skipped.Count} utility tag(s)): {string.Join(", ", skipped)}");
             }
+
+            sb.AppendLine("============================================================");
+            sb.AppendLine();
+            sb.Append(body);
 
             var outputDir = Path.GetDirectoryName(firstZip) ?? AppDomain.CurrentDomain.BaseDirectory;
             var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
-            var reportName = $"seq_compare_{stamp}.txt";
-            var reportPath = Path.Combine(outputDir, reportName);
-            if (!sb.ToString().Contains("Differences:"))
-            {
-                sb.AppendLine("No differences found.");
-            }
+            var reportPath = Path.Combine(outputDir, $"seq_compare_{stamp}.txt");
             File.WriteAllText(reportPath, sb.ToString());
             return reportPath;
         }
 
         /// <summary>
         /// Step 0 is excluded from the UI, so a difference there is real but cannot be
-        /// opened and inspected. Marking it keeps the information visible while making
-        /// clear why the step won't appear when navigating.
+        /// opened and inspected.
         /// </summary>
-        private static string AnnotateUnreachableStep(string diff)
+        private static bool IsUnreachableStep(string path) =>
+            path.StartsWith("$.value[0]", StringComparison.Ordinal);
+
+        /// <summary>
+        /// Turns a JSONPath emitted by <see cref="CompareJsonNodes"/> into something a
+        /// mechanical engineer can read, e.g. "$.value[5].C1.TM" becomes
+        /// "Step 5  |  C1  |  TM (Tool Mount)". Anything that does not match the expected
+        /// shape is returned unchanged rather than dropped.
+        /// </summary>
+        private string DescribeDiffPath(string path)
         {
-            const string step0Prefix = "$.value[0]";
-            return diff.StartsWith(step0Prefix, StringComparison.Ordinal)
-                ? diff + "   [step 0 - not viewable in the UI; inspect the JSON directly]"
-                : diff;
+            const string prefix = "$.value[";
+            if (!path.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return path;
+            }
+
+            int close = path.IndexOf(']', prefix.Length);
+            if (close < 0 ||
+                !int.TryParse(path.AsSpan(prefix.Length, close - prefix.Length),
+                    NumberStyles.Integer, CultureInfo.InvariantCulture, out int step))
+            {
+                return path;
+            }
+
+            var rest = path[(close + 1)..].TrimStart('.');
+            if (rest.Length == 0)
+            {
+                return $"Step {step}";
+            }
+
+            // "C1.TM" is a group member; a bare "MTFR" is one of the SEQ setpoints.
+            var parts = rest.Split('.');
+            string group = parts.Length >= 2 ? parts[0] : "SEQ";
+            string member = parts.Length >= 2 ? parts[1] : parts[0];
+
+            var description = LookupDescription(group, member);
+            var label = string.IsNullOrWhiteSpace(description) ? member : $"{member} ({description})";
+            var groupLabel = string.Equals(group, "SEQ", StringComparison.Ordinal) ? "Setpoints" : group;
+
+            return $"Step {step}  |  {groupLabel}  |  {label}";
         }
 
         private static void AppendZipInfo(StringBuilder sb, string label, string zipPath)
@@ -1330,7 +1415,8 @@ namespace SequenceNavigator
             return map;
         }
 
-        private static void CompareJsonNodes(JsonNode? a, JsonNode? b, string path, List<string> diffs)
+        private static void CompareJsonNodes(JsonNode? a, JsonNode? b, string path,
+            List<(string Path, string Detail)> diffs)
         {
             if (a is null && b is null)
             {
@@ -1338,12 +1424,12 @@ namespace SequenceNavigator
             }
             if (a is null)
             {
-                diffs.Add($"{path}: missing in Zip A");
+                diffs.Add((path, "missing in Zip A"));
                 return;
             }
             if (b is null)
             {
-                diffs.Add($"{path}: missing in Zip B");
+                diffs.Add((path, "missing in Zip B"));
                 return;
             }
 
@@ -1353,7 +1439,7 @@ namespace SequenceNavigator
                 var bText = b.ToJsonString();
                 if (!string.Equals(aText, bText, StringComparison.Ordinal))
                 {
-                    diffs.Add($"{path}: {aText} != {bText}");
+                    diffs.Add((path, $"{aText} != {bText}"));
                 }
                 return;
             }
@@ -1382,7 +1468,7 @@ namespace SequenceNavigator
             {
                 if (arrA.Count != arrB.Count)
                 {
-                    diffs.Add($"{path}: array length {arrA.Count} != {arrB.Count}");
+                    diffs.Add((path, $"array length {arrA.Count} != {arrB.Count}"));
                 }
                 int count = Math.Min(arrA.Count, arrB.Count);
                 for (int i = 0; i < count; i++)
@@ -1392,7 +1478,7 @@ namespace SequenceNavigator
                 return;
             }
 
-            diffs.Add($"{path}: type mismatch ({a.GetType().Name} vs {b.GetType().Name})");
+            diffs.Add((path, $"type mismatch ({a.GetType().Name} vs {b.GetType().Name})"));
         }
 
         private void OnPropertyChanged(string name) =>
