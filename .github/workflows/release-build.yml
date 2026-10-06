@@ -20,10 +20,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Fails before the build rather than after, so a version slip costs seconds.
+      - name: Resolve version
+        run: |
+          $xml = [xml](Get-Content SequenceNavigator.csproj)
+          $version = @($xml.Project.PropertyGroup.Version | Where-Object { $_ })[0]
+          if (-not $version) { throw "No <Version> element in SequenceNavigator.csproj" }
+          $version = $version.Trim()
+          $tag = "${{ github.event.release.tag_name }}"
+          if ($tag -and $tag.TrimStart('v') -ne $version) {
+            throw "Version mismatch: csproj says $version, release tag is $tag. Bump <Version> or retag."
+          }
+          "ZIP_NAME=Sequence_Navigator_v${version}_Windows_x64.zip" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Packaging version $version"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "10.0.x"
 
       - name: Restore
         run: dotnet restore
@@ -64,14 +78,15 @@ jobs:
           Copy-Item -Path "SEQ_DataType.L5X" -Destination "publish" -Force
           Copy-Item -Path "seq_exporter.py" -Destination "publish" -Force
           Copy-Item -Path "seq_importer.py" -Destination "publish" -Force
+          Copy-Item -Path "plc_identity.py" -Destination "publish" -Force
 
       - name: Package
         run: |
-          $zip = "Sequence_Navigator_Windows_x64.zip"
+          $zip = $env:ZIP_NAME
           if (Test-Path $zip) { Remove-Item $zip -Force }
           Compress-Archive -Path "publish\\*" -DestinationPath $zip
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: Sequence_Navigator_Windows_x64.zip
+          files: ${{ env.ZIP_NAME }}

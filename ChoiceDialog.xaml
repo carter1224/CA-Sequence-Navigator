@@ -1,0 +1,44 @@
+<Window x:Class="SequenceNavigator.ChoiceDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="500" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock x:Name="ToneIcon" FontFamily="{StaticResource IconFont}" FontSize="24"
+                 Margin="0,0,16,0" VerticalAlignment="Top"/>
+      <StackPanel Grid.Column="1">
+        <TextBlock x:Name="Heading" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+        <TextBlock x:Name="Body" Margin="0,8,0,0" TextWrapping="Wrap"/>
+        <Border x:Name="ListBorder" Visibility="Collapsed" Margin="0,12,0,0" CornerRadius="4"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" MaxHeight="220"
+                Background="{StaticResource AppBg}">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="Items" Margin="10,6">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Margin="0,2"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Border>
+      </StackPanel>
+    </Grid>
+    <!-- Microsoft's dialog guidance: the "do it" actions on the left, the safe choice on
+         the right, every button named for what it does. -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button x:Name="PrimaryChoice" Click="PrimaryChoice_Click"/>
+      <Button x:Name="SecondaryChoice" Margin="8,0,0,0" Click="SecondaryChoice_Click"/>
+      <Button x:Name="CloseChoice" Margin="8,0,0,0" IsCancel="True" Click="CloseChoice_Click"/>
+    </StackPanel>
+  </Grid>
+</Window>

@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import sys
 import time
 import zipfile
@@ -66,6 +67,64 @@ def read_seq100_elements(plc: LogixDriver, base_tag: str, chunk_size: int):
     return elems
 
 
+def read_all_seq_tags(plc: LogixDriver, include_program_tags: bool) -> dict:
+    """Reads every SEQ[100] tag into memory as {zip entry name: JSON text}.
+
+    Nothing touches the disk here. A backup holding only some of the tags looks like a
+    complete one, so the file is written only once this has returned every tag.
+    """
+    tags = plc.get_tag_list(program="*" if include_program_tags else None)
+    matches = [t for t in tags if is_seq_100(t)]
+    names = sorted([t.get("tag_name", "") for t in matches if t.get("tag_name")], key=str.lower)
+    if not names:
+        raise RuntimeError("No SEQ[100] tags were found on the controller; nothing was saved.")
+
+    entries = {}
+    for base in names:
+        values = read_seq100_elements(plc, base, chunk_size=20)
+        payload = {
+            "source_tag_name": base,
+            "required_definition": f"{REQUIRED_UDT_NAME} dims [{REQUIRED_ARRAY_LEN},0,0]",
+            "value": values,
+        }
+        entries[f"{safe_filename(base)}.json"] = json.dumps(payload, indent=2)
+
+    # Two tag names that clean up to the same file name would silently overwrite one.
+    if len(entries) != len(names):
+        raise RuntimeError(
+            f"Read {len(names)} SEQ[100] tags but they map to only {len(entries)} file names; nothing was saved."
+        )
+    return entries
+
+
+def write_zip_atomically(out_path: Path, entries: dict) -> None:
+    """Writes the ZIP beside its destination, checks it, then swaps it into place.
+
+    An existing file at out_path stays untouched until the new one is complete and
+    verified, and a failure part-way leaves nothing behind.
+    """
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = out_path.with_name(out_path.name + ".partial")
+    try:
+        with zipfile.ZipFile(tmp_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for name, text in entries.items():
+                zf.writestr(name, text)
+
+        with zipfile.ZipFile(tmp_path, "r") as zf:
+            bad = zf.testzip()
+            if bad is not None:
+                raise RuntimeError(f"The written backup failed its check at {bad}; nothing was saved.")
+            if len(zf.namelist()) != len(entries):
+                raise RuntimeError(
+                    f"The written backup holds {len(zf.namelist())} of {len(entries)} tags; nothing was saved."
+                )
+
+        os.replace(tmp_path, out_path)
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Export SEQ[100] tags to JSON and zip the results.")
     parser.add_argument("--ip", required=True, help="Controller IP address.")
@@ -83,46 +142,31 @@ def main():
     args = parse_args()
 
     out_path = Path(args.out_zip).resolve()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-
     path = f"{args.ip}/{args.eth_slot}/{args.cpu_slot}"
 
-    exported = 0
     attempts = max(1, int(args.retries))
     delay = max(0.0, float(args.retry_delay))
     timeout = float(args.timeout)
+    entries = None
     for attempt in range(1, attempts + 1):
         try:
-            with zipfile.ZipFile(out_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-                try:
-                    plc_ctx = LogixDriver(path, timeout=timeout)
-                except TypeError:
-                    plc_ctx = LogixDriver(path)
-                with plc_ctx as plc:
-                    tags = plc.get_tag_list(program="*" if args.include_program_tags else None)
-                    matches = [t for t in tags if is_seq_100(t)]
-                    names = sorted([t.get("tag_name", "") for t in matches if t.get("tag_name")], key=str.lower)
-
-                    for base in names:
-                        values = read_seq100_elements(plc, base, chunk_size=20)
-                        base_name = safe_filename(base)
-                        payload = {
-                            "source_tag_name": base,
-                            "required_definition": f"{REQUIRED_UDT_NAME} dims [{REQUIRED_ARRAY_LEN},0,0]",
-                            "value": values,
-                        }
-                        json_text = json.dumps(payload, indent=2)
-                        zf.writestr(f"{base_name}.json", json_text)
-                        exported += 1
-
-            print(f"Exported {exported} tag(s).")
-            print(f"ZIP file: {out_path}")
-            return
+            try:
+                plc_ctx = LogixDriver(path, timeout=timeout)
+            except TypeError:
+                plc_ctx = LogixDriver(path)
+            with plc_ctx as plc:
+                entries = read_all_seq_tags(plc, args.include_program_tags)
+            break
         except Exception as exc:
             if attempt >= attempts:
                 raise
             print(f"Retrying PLC export ({attempt}/{attempts}) after error: {exc}", file=sys.stderr)
             time.sleep(delay)
+
+    # Only now, with every tag read, does anything get written to disk.
+    write_zip_atomically(out_path, entries)
+    print(f"Exported {len(entries)} tag(s).")
+    print(f"ZIP file: {out_path}")
 
 
 if __name__ == "__main__":
