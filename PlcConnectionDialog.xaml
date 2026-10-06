@@ -1,0 +1,61 @@
+<Window x:Class="SequenceNavigator.PlcConnectionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="540" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+  <StackPanel Margin="20">
+    <TextBlock x:Name="Heading" FontSize="16" FontWeight="SemiBold"/>
+    <TextBlock x:Name="Intro" Style="{StaticResource HintText}" Margin="0,6,0,16"/>
+
+    <TextBlock Text="Controller address" FontWeight="SemiBold" Margin="0,0,0,4"/>
+    <!-- Editable: type a new address or pick one used before. Picking fills the slot too. -->
+    <ComboBox x:Name="AddressBox" IsEditable="True" TextSearch.TextPath="Ip"
+              SelectionChanged="AddressBox_SelectionChanged"
+              AutomationProperties.Name="Controller address">
+      <ComboBox.ItemTemplate>
+        <DataTemplate>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding Ip}" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Detail}" Margin="10,0,0,0" Foreground="{StaticResource SubtleTextBrush}"/>
+          </StackPanel>
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
+    <TextBlock x:Name="AddressError" Style="{StaticResource ErrorText}" Visibility="Collapsed"/>
+
+    <TextBlock Text="Controller slot" FontWeight="SemiBold" Margin="0,14,0,4"/>
+    <StackPanel Orientation="Horizontal">
+      <TextBox x:Name="SlotBox" Width="80" AutomationProperties.Name="Controller slot"/>
+      <TextBlock Style="{StaticResource HintText}" VerticalAlignment="Center" Margin="12,0,0,0"
+                 Text="0 for CompactLogix · the processor's slot for ControlLogix"/>
+    </StackPanel>
+    <TextBlock x:Name="SlotError" Style="{StaticResource ErrorText}" Visibility="Collapsed"/>
+
+    <!-- Reads only the controller's identity, so the engineer can confirm the right
+         machine before anything is transferred. -->
+    <Grid Margin="0,16,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Button x:Name="TestBtn" Click="TestBtn_Click" ToolTip="Read the controller's name and model without transferring anything">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Style="{StaticResource IconText}" Text="&#xE703;"/>
+          <TextBlock Style="{StaticResource ButtonLabel}" Text="Test connection"/>
+        </StackPanel>
+      </Button>
+      <TextBlock x:Name="TestResult" Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"
+                 TextWrapping="Wrap" FontSize="12"/>
+    </Grid>
+
+    <Border x:Name="SummaryBorder" Visibility="Collapsed" Margin="0,16,0,0" Padding="12,10" CornerRadius="6"
+            Background="#FFF4CE" BorderBrush="#E8C95A" BorderThickness="1">
+      <TextBlock x:Name="Summary" TextWrapping="Wrap"/>
+    </Border>
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button x:Name="GoBtn" Click="GoBtn_Click" IsDefault="True"/>
+      <Button Content="Cancel" Margin="8,0,0,0" IsCancel="True"/>
+    </StackPanel>
+  </StackPanel>
+</Window>

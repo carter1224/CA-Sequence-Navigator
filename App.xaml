@@ -2,9 +2,17 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:SequenceNavigator"
-             StartupUri="MainWindow.xaml">
+             StartupUri="MainWindow.xaml"
+             ThemeMode="Light">
+  <!-- Fluent (Windows 11) styling, pinned to Light. Plant HMIs use light neutral screens,
+       and a laptop set to dark mode must not make this tool disagree with the floor. The
+       styles below sit on top of Fluent and pin the colours the app depends on. -->
   <Application.Resources>
     <local:ValueHighlightConverter x:Key="ValueHighlightConverter"/>
+
+    <!-- Segoe Fluent Icons ships with Windows 11; Segoe MDL2 Assets is the Windows 10
+         equivalent with the same code points, so one glyph works on both. -->
+    <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
     <!-- Base theme -->
     <SolidColorBrush x:Key="AppBg" Color="#F6F7FB"/>
@@ -21,8 +29,15 @@
     <SolidColorBrush x:Key="ButtonActiveBg" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="ButtonActiveBorder" Color="#BFC7D6"/>
     <SolidColorBrush x:Key="ButtonActiveBorderHover" Color="#A8B1C5"/>
-    <SolidColorBrush x:Key="ToggleCheckedBg" Color="#DDE3EF"/>
-    <SolidColorBrush x:Key="ToggleCheckedBorder" Color="#8C96AA"/>
+    <!-- Red is kept for errors and for the one action that changes a controller. -->
+    <SolidColorBrush x:Key="DangerBrush" Color="#B42318"/>
+    <SolidColorBrush x:Key="DangerHoverBg" Color="#FDECEA"/>
+    <!-- Amber means "you are editing". -->
+    <SolidColorBrush x:Key="EditingBg" Color="#FFE7A3"/>
+    <SolidColorBrush x:Key="EditingBorder" Color="#E0B21B"/>
+    <SolidColorBrush x:Key="StatusBarBg" Color="#EEF1F6"/>
+    <!-- Card outline, darkened from #C8CFDD so it reaches 3:1 against white. -->
+    <SolidColorBrush x:Key="CardOutline" Color="#878FA3"/>
 
     <Style TargetType="Window">
       <Setter Property="Background" Value="{StaticResource AppBg}"/>
@@ -40,20 +55,14 @@
       <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
     </Style>
 
-    <Style TargetType="TextBox">
-      <Setter Property="MinHeight" Value="30"/>
+    <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+      <Setter Property="MinHeight" Value="32"/>
       <Setter Property="Padding" Value="8,4"/>
-      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="Background" Value="{StaticResource PanelBg}"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
 
-    <Style TargetType="ComboBox">
-      <Setter Property="MinHeight" Value="30"/>
-      <Setter Property="Padding" Value="8,2"/>
-      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="Background" Value="{StaticResource PanelBg}"/>
+    <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+      <Setter Property="MinHeight" Value="32"/>
       <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
 
@@ -62,20 +71,19 @@
       <Setter Property="Padding" Value="8"/>
       <Setter Property="Margin" Value="6"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="BorderBrush" Value="#C8CFDD"/>
+      <Setter Property="BorderBrush" Value="{StaticResource CardOutline}"/>
       <Setter Property="Background" Value="{StaticResource PanelBg}"/>
       <Setter Property="SnapsToDevicePixels" Value="True"/>
       <!-- No DropShadowEffect here on purpose. Any Effect renders its subtree to an
            intermediate surface, which disables ClearType, so every description and value
-           inside a card came out soft while text outside stayed crisp. A slightly firmer
-           border gives the cards definition without costing text quality. -->
+           inside a card came out soft while text outside stayed crisp. -->
     </Style>
 
     <!-- Every Button and ToggleButton in the app derives from this. Do not set Width,
          MinWidth or Padding locally: a local value beats a style setter, which is how
          the dialogs drifted apart from the main window. -->
     <Style x:Key="BaseButtonStyle" TargetType="ButtonBase">
-      <Setter Property="MinHeight" Value="30"/>
+      <Setter Property="MinHeight" Value="34"/>
       <Setter Property="MinWidth" Value="90"/>
       <Setter Property="Padding" Value="12,4"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -86,7 +94,6 @@
       <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
       <Setter Property="FontWeight" Value="Normal"/>
       <Setter Property="Cursor" Value="Hand"/>
-      <!-- No DropShadowEffect: it disabled ClearType on every button label. -->
       <Style.Triggers>
         <Trigger Property="IsMouseOver" Value="True">
           <Setter Property="Background" Value="{StaticResource ButtonHoverBrush}"/>
@@ -110,8 +117,8 @@
     <Style TargetType="ToggleButton" BasedOn="{StaticResource BaseButtonStyle}">
       <Style.Triggers>
         <Trigger Property="IsChecked" Value="True">
-          <Setter Property="Background" Value="{StaticResource ToggleCheckedBg}"/>
-          <Setter Property="BorderBrush" Value="{StaticResource ToggleCheckedBorder}"/>
+          <Setter Property="Background" Value="{StaticResource EditingBg}"/>
+          <Setter Property="BorderBrush" Value="{StaticResource EditingBorder}"/>
         </Trigger>
         <Trigger Property="IsEnabled" Value="False">
           <Setter Property="Background" Value="{StaticResource ButtonDisabledBg}"/>
@@ -123,6 +130,7 @@
       </Style.Triggers>
     </Style>
 
+    <!-- The one "do it" action in a dialog or panel. -->
     <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
       <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
       <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
@@ -132,7 +140,92 @@
           <Setter Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
           <Setter Property="BorderBrush" Value="{StaticResource PrimaryHoverBrush}"/>
         </Trigger>
+        <Trigger Property="IsEnabled" Value="False">
+          <Setter Property="Background" Value="{StaticResource ButtonDisabledBg}"/>
+          <Setter Property="BorderBrush" Value="{StaticResource ButtonDisabledBg}"/>
+          <Setter Property="Foreground" Value="{StaticResource ButtonDisabledText}"/>
+        </Trigger>
       </Style.Triggers>
+    </Style>
+
+    <!-- Actions that change a controller. Distinct on purpose: it must never be mistaken
+         for Edit Mode or Save Changes beside it. -->
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="Background" Value="{StaticResource DangerHoverBg}"/>
+          <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/>
+        </Trigger>
+        <Trigger Property="IsEnabled" Value="False">
+          <Setter Property="Background" Value="{StaticResource ButtonDisabledBg}"/>
+          <Setter Property="BorderBrush" Value="{StaticResource ButtonDisabledBg}"/>
+          <Setter Property="Foreground" Value="{StaticResource ButtonDisabledText}"/>
+          <Setter Property="FontWeight" Value="Normal"/>
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+
+    <!-- Borderless, for secondary actions inside panels (close, swap, show details). -->
+    <Style x:Key="QuietButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="8,4"/>
+      <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="Background" Value="#14000000"/>
+          <Setter Property="BorderBrush" Value="Transparent"/>
+        </Trigger>
+        <Trigger Property="IsEnabled" Value="False">
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="BorderBrush" Value="Transparent"/>
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+
+    <!-- Step navigation is the most-clicked control and is used with gloves and touchpads,
+         so it gets Microsoft's 40px minimum target height. -->
+    <Style x:Key="NavButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="MinHeight" Value="40"/>
+      <Setter Property="MinWidth" Value="0"/>
+    </Style>
+
+    <!-- Icon glyph inside a button; takes the button's text colour so disabled and danger
+         states carry through. -->
+    <Style x:Key="IconText" TargetType="TextBlock">
+      <Setter Property="FontFamily" Value="{StaticResource IconFont}"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="0,0,8,0"/>
+      <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Control}}"/>
+    </Style>
+
+    <Style x:Key="ButtonLabel" TargetType="TextBlock">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Control}}"/>
+    </Style>
+
+    <Style x:Key="SectionHeader" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="11.5"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource SubtleTextBrush}"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <Style x:Key="HintText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{StaticResource SubtleTextBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style x:Key="ErrorText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,4,0,0"/>
     </Style>
 
     <Style TargetType="TabControl">
@@ -144,9 +237,8 @@
 
     <Style TargetType="TabItem">
       <!-- The template below centres the header itself and never binds Padding, so an
-           explicit height is what actually sizes the tab. It also has to clear the
-           30px button minimum, since the edit/transfer buttons share this band. -->
-      <Setter Property="Height" Value="38"/>
+           explicit height is what actually sizes the tab: 40, the minimum touch target. -->
+      <Setter Property="Height" Value="40"/>
       <Setter Property="Padding" Value="18,10"/>
       <Setter Property="Margin" Value="0"/>
       <Setter Property="MinWidth" Value="90"/>
@@ -195,4 +287,3 @@
     </Style>
   </Application.Resources>
 </Application>
-
