@@ -50,7 +50,7 @@ namespace SequenceNavigator
 
         private void LastStep_Click(object sender, RoutedEventArgs e)
         {
-            if (LastUsedStep() is int step)
+            if (SequenceEnd() is int step)
             {
                 GoToStep(step);
             }
@@ -63,23 +63,15 @@ namespace SequenceNavigator
             RefreshControlStates();
         }
 
-        /// <summary>The highest step that has anything on, or null for an empty sequence.</summary>
-        private int? LastUsedStep()
-        {
-            if (_currentJsonName == null || !_scans.TryGetValue(_currentJsonName, out var scan))
-            {
-                return null;
-            }
+        private SequenceScan? CurrentScan =>
+            _currentJsonName != null && _scans.TryGetValue(_currentJsonName, out var scan) ? scan : null;
 
-            for (int step = LastStep; step >= FirstStep; step--)
-            {
-                if (scan.Used[step])
-                {
-                    return step;
-                }
-            }
-            return null;
-        }
+        /// <summary>
+        /// Where the sequence ends: the step with ES (End the sequence) set, the last one if
+        /// a branch ends early too. A sequence with no ES falls back to its last step in use.
+        /// </summary>
+        private int? SequenceEnd() =>
+            CurrentScan is { } scan ? (scan.EndSteps.Count > 0 ? scan.EndSteps[^1] : scan.LastUsed) : null;
 
         private void UpdateStepUsage()
         {
@@ -89,16 +81,53 @@ namespace SequenceNavigator
                 return;
             }
 
-            // Steps run in order from 1, so the end of the sequence is what is worth showing.
-            // An empty step before the end is unusual and called out.
-            int? last = LastUsedStep();
-            StepUsageText.Text = last is not int end
-                ? "No steps used in this sequence"
-                : _currentIndex > end
-                    ? string.Create(CultureInfo.InvariantCulture, $"Step {_currentIndex} is after the last step in use ({end})")
-                    : !scan.Used[_currentIndex]
-                        ? string.Create(CultureInfo.InvariantCulture, $"Step {_currentIndex} is empty · last step in use: {end}")
-                        : string.Create(CultureInfo.InvariantCulture, $"Last step in use: {end}");
+            StepUsageText.Text = DescribeStepPosition(scan, _currentIndex);
+        }
+
+        /// <summary>
+        /// Where this step sits relative to the sequence's end. Sequences run in order from
+        /// step 1 to the step with ES (End the sequence) set, so the end is what is worth
+        /// showing; anything that breaks that pattern (steps in use after ES, no ES at all,
+        /// an empty step before the end) is called out, since it is usually worth a look.
+        /// </summary>
+        private static string DescribeStepPosition(SequenceScan scan, int step)
+        {
+            if (scan.LastUsed is not int lastUsed)
+            {
+                return "No steps used in this sequence";
+            }
+
+            var c = CultureInfo.InvariantCulture;
+            if (scan.EndSteps.Count == 0)
+            {
+                return step > lastUsed
+                    ? string.Create(c, $"Step {step} is after the last step in use ({lastUsed}) · no ES step")
+                    : string.Create(c, $"No ES step · last step in use: {lastUsed}");
+            }
+
+            int end = scan.EndSteps[^1];
+            if (step > end)
+            {
+                return scan.Used[step]
+                    ? string.Create(c, $"Step {step} is after the end (step {end}, ES) but has values set")
+                    : string.Create(c, $"Step {step} is after the end (step {end}, ES)");
+            }
+            if (!scan.Used[step])
+            {
+                return string.Create(c, $"Step {step} is empty · ends at step {end} (ES)");
+            }
+
+            var text = step == end ? "This is the end (ES)" : string.Create(c, $"Ends at step {end} (ES)");
+            var earlier = scan.EndSteps.Take(scan.EndSteps.Count - 1).ToList();
+            if (earlier.Count > 0)
+            {
+                text += string.Create(c, $" · also ES at {string.Join(", ", earlier)}");
+            }
+            if (lastUsed > end)
+            {
+                text += string.Create(c, $" · steps after it in use, up to {lastUsed}");
+            }
+            return text;
         }
 
         /// <summary>
@@ -542,6 +571,12 @@ namespace SequenceNavigator
         public int UsedCount { get; private set; }
         public List<SearchEntry> Active { get; } = new();
 
+        /// <summary>Steps with ES (End the sequence, C1) set, in order.</summary>
+        public List<int> EndSteps { get; } = new();
+
+        /// <summary>The highest step with anything on, or null if none.</summary>
+        public int? LastUsed { get; private set; }
+
         public static SequenceScan Build(string entryName, string json, Func<string, string, string?> describe)
         {
             var scan = new SequenceScan(entryName);
@@ -581,6 +616,11 @@ namespace SequenceNavigator
                     {
                         if (member.Value.ValueKind == JsonValueKind.True)
                         {
+                            // CMD03 "End the sequence": the step the sequence finishes on.
+                            if (prop.Name == "C1" && member.Name == "ES" && !EndSteps.Contains(step))
+                            {
+                                EndSteps.Add(step);
+                            }
                             Mark(step);
                             Active.Add(new SearchEntry(Sequence, entryName, step, prop.Name, member.Name,
                                 describe(prop.Name, member.Name), "true"));
@@ -605,6 +645,10 @@ namespace SequenceNavigator
             {
                 Used[step] = true;
                 UsedCount++;
+            }
+            if (LastUsed is not int last || step > last)
+            {
+                LastUsed = step;
             }
         }
     }
