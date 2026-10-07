@@ -46,17 +46,11 @@ namespace SequenceNavigator
             }
         }
 
-        private void PrevUsed_Click(object sender, RoutedEventArgs e)
-        {
-            if (FindUsedStep(-1) is int step)
-            {
-                GoToStep(step);
-            }
-        }
+        private void FirstStep_Click(object sender, RoutedEventArgs e) => GoToStep(FirstStep);
 
-        private void NextUsed_Click(object sender, RoutedEventArgs e)
+        private void LastStep_Click(object sender, RoutedEventArgs e)
         {
-            if (FindUsedStep(+1) is int step)
+            if (LastUsedStep() is int step)
             {
                 GoToStep(step);
             }
@@ -69,15 +63,15 @@ namespace SequenceNavigator
             RefreshControlStates();
         }
 
-        /// <summary>The nearest step in the given direction that has anything on.</summary>
-        private int? FindUsedStep(int direction)
+        /// <summary>The highest step that has anything on, or null for an empty sequence.</summary>
+        private int? LastUsedStep()
         {
             if (_currentJsonName == null || !_scans.TryGetValue(_currentJsonName, out var scan))
             {
                 return null;
             }
 
-            for (int step = _currentIndex + direction; step >= FirstStep && step <= LastStep; step += direction)
+            for (int step = LastStep; step >= FirstStep; step--)
             {
                 if (scan.Used[step])
                 {
@@ -95,11 +89,16 @@ namespace SequenceNavigator
                 return;
             }
 
-            StepUsageText.Text = scan.UsedCount == 0
+            // Steps run in order from 1, so the end of the sequence is what is worth showing.
+            // An empty step before the end is unusual and called out.
+            int? last = LastUsedStep();
+            StepUsageText.Text = last is not int end
                 ? "No steps used in this sequence"
-                : scan.Used[_currentIndex]
-                    ? string.Create(CultureInfo.InvariantCulture, $"{scan.UsedCount} of {LastStep} steps used")
-                    : string.Create(CultureInfo.InvariantCulture, $"Step {_currentIndex} is empty · {scan.UsedCount} of {LastStep} used");
+                : _currentIndex > end
+                    ? string.Create(CultureInfo.InvariantCulture, $"Step {_currentIndex} is after the last step in use ({end})")
+                    : !scan.Used[_currentIndex]
+                        ? string.Create(CultureInfo.InvariantCulture, $"Step {_currentIndex} is empty · last step in use: {end}")
+                        : string.Create(CultureInfo.InvariantCulture, $"Last step in use: {end}");
         }
 
         /// <summary>
@@ -219,7 +218,7 @@ namespace SequenceNavigator
                 case Key.PageDown when !inDropDown:
                     if (ctrl)
                     {
-                        NextUsed_Click(this, e);
+                        LastStep_Click(this, e);
                     }
                     else if (NextBtn.IsEnabled)
                     {
@@ -229,7 +228,7 @@ namespace SequenceNavigator
                 case Key.PageUp when !inDropDown:
                     if (ctrl)
                     {
-                        PrevUsed_Click(this, e);
+                        FirstStep_Click(this, e);
                     }
                     else if (PrevBtn.IsEnabled)
                     {

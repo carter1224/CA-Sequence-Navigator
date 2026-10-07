@@ -279,18 +279,19 @@
                 <TextBlock Style="{StaticResource IconText}" Text="&#xE76C;" FontSize="12" Margin="8,0,0,0"/>
               </StackPanel>
             </Button>
-            <!-- Most sequences use a handful of their 99 steps, so these skip the empty ones. -->
-            <Button x:Name="PrevUsedBtn" Grid.Column="5" Style="{StaticResource NavButton}" Margin="16,0,0,0"
-                    Click="PrevUsed_Click" ToolTip="Previous step that has something on (Ctrl+Page Up)">
+            <!-- Sequences fill their steps in order from step 1, so the useful jumps are to
+                 either end: step 1, and the last step in use. -->
+            <Button x:Name="FirstStepBtn" Grid.Column="5" Style="{StaticResource NavButton}" Margin="16,0,0,0"
+                    Click="FirstStep_Click" ToolTip="Go to step 1 (Ctrl+Page Up)">
               <StackPanel Orientation="Horizontal">
                 <TextBlock Style="{StaticResource IconText}" Text="&#xE892;" FontSize="12"/>
-                <TextBlock Style="{StaticResource ButtonLabel}" Text="Prev used"/>
+                <TextBlock Style="{StaticResource ButtonLabel}" Text="First"/>
               </StackPanel>
             </Button>
-            <Button x:Name="NextUsedBtn" Grid.Column="6" Style="{StaticResource NavButton}" Margin="8,0,0,0"
-                    Click="NextUsed_Click" ToolTip="Next step that has something on (Ctrl+Page Down)">
+            <Button x:Name="LastStepBtn" Grid.Column="6" Style="{StaticResource NavButton}" Margin="8,0,0,0"
+                    Click="LastStep_Click" ToolTip="Go to the last step in use (Ctrl+Page Down)">
               <StackPanel Orientation="Horizontal">
-                <TextBlock Style="{StaticResource ButtonLabel}" Text="Next used"/>
+                <TextBlock Style="{StaticResource ButtonLabel}" Text="Last"/>
                 <TextBlock Style="{StaticResource IconText}" Text="&#xE893;" FontSize="12" Margin="8,0,0,0"/>
               </StackPanel>
             </Button>
