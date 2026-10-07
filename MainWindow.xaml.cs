@@ -227,8 +227,8 @@ namespace SequenceNavigator
             PrevBtn.IsEnabled = idle && hasSeq && _currentIndex > FirstStep;
             NextBtn.IsEnabled = idle && hasSeq && _currentIndex < LastStep;
             IndexBox.IsEnabled = idle && hasSeq;
-            PrevUsedBtn.IsEnabled = idle && hasSeq && FindUsedStep(-1) != null;
-            NextUsedBtn.IsEnabled = idle && hasSeq && FindUsedStep(+1) != null;
+            FirstStepBtn.IsEnabled = idle && hasSeq && _currentIndex > FirstStep;
+            LastStepBtn.IsEnabled = idle && hasSeq && SequenceEnd() is int end && _currentIndex != end;
 
             IndexLabel.Text = hasSeq ? $"Step {_currentIndex}" : "Step –";
             if (!IndexBox.IsFocused)
