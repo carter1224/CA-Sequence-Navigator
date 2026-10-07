@@ -1,6 +1,6 @@
 # Sequence Navigator
 
-Internal Build 2.0.0 by Carter Smith
+Internal Build 2.0.1 by Carter Smith
 
 Sequence Navigator is an industrial Windows utility for Complete Automation. Mechanical engineers use it to view and back up the SEQ[100] sequences of the paint system, step by step, in the same card layout as the plant HMI. It can also edit values, compare backups, and upload from or download to a PLC through bundled helpers.
 

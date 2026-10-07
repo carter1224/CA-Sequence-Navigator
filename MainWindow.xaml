@@ -376,12 +376,13 @@
           </TabItem>
         </TabControl>
 
-        <!-- Shown only while a PLC transfer runs. The cards are empty by then, so a spinner
-             in their place says what is happening. Purely visual: it never takes clicks.
+        <!-- Shown while a PLC transfer runs, and until an upload has been saved. A solid
+             panel over the card area: during a download or comparison the cards are still
+             loaded, and must neither show through the spinner nor be clickable mid-transfer.
              The top margin keeps it clear of the 40-high tab strip. -->
-        <StackPanel x:Name="LoadingOverlay" Visibility="Collapsed" IsHitTestVisible="False"
-                    HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,40,0,0">
-          <Canvas Width="72" Height="72" RenderTransformOrigin="0.5,0.5">
+        <Grid x:Name="LoadingOverlay" Visibility="Collapsed" Margin="1,40,1,1" Background="{StaticResource PanelBg}">
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+          <Canvas x:Name="Spinner" Width="72" Height="72" RenderTransformOrigin="0.5,0.5">
             <Canvas.RenderTransform>
               <RotateTransform/>
             </Canvas.RenderTransform>
@@ -418,7 +419,8 @@
           </Canvas>
           <TextBlock x:Name="LoadingCaption" Text="Uploading from PLC" Margin="0,16,0,0" HorizontalAlignment="Center"
                      FontSize="14" Foreground="{StaticResource SubtleTextBrush}"/>
-        </StackPanel>
+          </StackPanel>
+        </Grid>
 
         <!-- Start screen: what to do when nothing is open, instead of an empty grid. -->
         <Border x:Name="StartScreen" Background="{StaticResource AppBg}" Visibility="Collapsed">
@@ -433,14 +435,14 @@
                   <StackPanel>
                     <TextBlock Text="&#xE8E5;" FontFamily="{StaticResource IconFont}" FontSize="24" Foreground="{StaticResource PrimaryBrush}"/>
                     <TextBlock Text="Open backup" FontSize="15" FontWeight="SemiBold" Margin="0,10,0,2"/>
-                    <TextBlock Text="A ZIP saved earlier · Ctrl+O" Style="{StaticResource HintText}"/>
+                    <TextBlock Text="A ZIP saved earlier · Ctrl&#x2060;+&#x2060;O" Style="{StaticResource HintText}"/>
                   </StackPanel>
                 </Button>
                 <Button Margin="4,0" Padding="16,14" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Click="ImportFromPlc_Click">
                   <StackPanel>
                     <TextBlock Text="&#xE898;" FontFamily="{StaticResource IconFont}" FontSize="24" Foreground="{StaticResource PrimaryBrush}"/>
                     <TextBlock Text="Upload from PLC" FontSize="15" FontWeight="SemiBold" Margin="0,10,0,2"/>
-                    <TextBlock Text="Read every sequence from a PLC · Ctrl+U" Style="{StaticResource HintText}"/>
+                    <TextBlock Text="Read every sequence from a PLC · Ctrl&#x2060;+&#x2060;U" Style="{StaticResource HintText}"/>
                   </StackPanel>
                 </Button>
                 <Button Margin="8,0,0,0" Padding="16,14" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Click="CompareSequences_Click">
