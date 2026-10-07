@@ -42,7 +42,7 @@ namespace SequenceNavigator
             // Unload the open file first. An empty window that fills when the upload
             // finishes makes it unmistakable which data came from the PLC.
             var stagingPath = await CaptureFromPlcAsync(conn, "Uploading from PLC", clearWindow: true,
-                retry: () => ImportFromPlc_Click(this, new RoutedEventArgs()));
+                retry: () => ImportFromPlc_Click(this, new RoutedEventArgs()), keepBusyOnSuccess: true);
             if (stagingPath == null)
             {
                 return;
@@ -50,7 +50,12 @@ namespace SequenceNavigator
 
             try
             {
-                // The full upload is in hand and verified; only now ask where it goes.
+                // The full upload is in hand and verified; only now ask where it goes. The
+                // window stays in its transfer state meanwhile: nothing is loaded yet, so
+                // leaving it would show the start screen behind the save dialog.
+                Spinner.Visibility = Visibility.Collapsed;
+                LoadingCaption.Text = "Upload complete. Choose where to save it.";
+                SetStatus("Upload complete. Choose where to save it.");
                 var destination = SaveUploadAs(stagingPath, conn);
                 if (destination == null)
                 {
@@ -67,6 +72,7 @@ namespace SequenceNavigator
             }
             finally
             {
+                EndTransfer();
                 TryDeleteFile(stagingPath);
             }
         }
@@ -245,10 +251,13 @@ namespace SequenceNavigator
         /// <summary>
         /// Reads every SEQ[100] tag into a verified ZIP in the temp folder. Reports any
         /// failure itself and returns null; on success returns the temp path, which the
-        /// caller owns and deletes.
+        /// caller owns and deletes. With keepBusyOnSuccess the transfer state (spinner
+        /// panel, disabled controls) is left on for the caller to end.
         /// </summary>
-        private async Task<string?> CaptureFromPlcAsync(PlcConnection conn, string caption, bool clearWindow, Action retry)
+        private async Task<string?> CaptureFromPlcAsync(PlcConnection conn, string caption, bool clearWindow,
+            Action retry, bool keepBusyOnSuccess = false)
         {
+            bool succeeded = false;
             // The exporter writes here first. Nothing appears where backups are kept until
             // the whole upload has been read and verified and the user has chosen a place.
             var stagingPath = Path.Combine(Path.GetTempPath(), $"SequenceNavigator_upload_{Guid.NewGuid():N}.zip");
@@ -290,6 +299,7 @@ namespace SequenceNavigator
                 }
 
                 _settings.AddRecentPlc(conn.Ip, conn.CpuSlot, conn.Identity?.Name, conn.Identity?.ProductName);
+                succeeded = true;
                 return stagingPath;
             }
             catch (Exception ex) when (IsHelperFailure(ex))
@@ -301,12 +311,16 @@ namespace SequenceNavigator
             }
             finally
             {
-                EndTransfer();
+                if (!(succeeded && keepBusyOnSuccess))
+                {
+                    EndTransfer();
+                }
             }
         }
 
         private void BeginTransfer(string caption)
         {
+            Spinner.Visibility = Visibility.Visible;
             LoadingCaption.Text = caption;
             LoadingOverlay.Visibility = Visibility.Visible;
             Info.Hide();
